@@ -1,13 +1,53 @@
-export function App() {
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
+import { AuthProvider, useAuth } from '@/hooks/useAuth'
+import { TasksPage } from '@/pages/TasksPage'
+import { SetupPage } from '@/pages/SetupPage'
+import type { ReactNode } from 'react'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 minute
+      retry: 2,
+      refetchOnWindowFocus: true,
+    },
+  },
+})
+
+function AuthGuard({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth()
+  if (!isAuthenticated) return <Navigate to="/setup" replace />
+  return children
+}
+
+function AppRoutes() {
   return (
-    <div className="min-h-svh bg-white text-gray-900">
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 px-4 py-3 backdrop-blur-sm">
-        <h1 className="text-lg font-semibold">TaskTrove</h1>
-      </header>
-      <main className="p-4">
-        <p className="text-gray-500">Loading tasks…</p>
-      </main>
-    </div>
+    <Routes>
+      <Route path="/setup" element={<SetupPage />} />
+      <Route
+        path="/"
+        element={
+          <AuthGuard>
+            <TasksPage />
+          </AuthGuard>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
+
+export function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
+  )
+}
+
 
