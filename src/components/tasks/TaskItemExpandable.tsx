@@ -59,7 +59,7 @@ export function TaskItemExpandable({
         >
           <span
             className={cn(
-              'text-[15px] leading-snug',
+              'text-base leading-snug',
               task.completed && 'text-gray-400 dark:text-gray-500 line-through',
             )}
           >
