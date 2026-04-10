@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useCreateTask } from '@/hooks/useTasks'
 import { useProjects } from '@/hooks/useProjects'
+import { useLabels } from '@/hooks/useLabels'
 import { cn } from '@/lib/utils'
+
+function todayString() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 interface QuickAddProps {
   open: boolean
@@ -9,20 +15,28 @@ interface QuickAddProps {
 }
 
 export function QuickAdd({ open, onClose }: QuickAddProps) {
+  const { data: projects } = useProjects()
+  const { data: labels } = useLabels()
+
+  const meProject = projects?.find((p) => p.name.toLowerCase() === 'me')
+  const defaultProjectId = meProject?.id ?? ''
+
   const [title, setTitle] = useState('')
-  const [dueDate, setDueDate] = useState('')
-  const [projectId, setProjectId] = useState('')
+  const [dueDate, setDueDate] = useState(todayString)
+  const [projectId, setProjectId] = useState<string | null>(null)
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [error, setError] = useState('')
+
+  // Use explicit selection if user has interacted, otherwise default to "me"
+  const effectiveProjectId = projectId ?? defaultProjectId
 
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
   const createTask = useCreateTask()
-  const { data: projects } = useProjects()
 
   useEffect(() => {
     if (open) {
-      // Small delay so the animation starts before focus
       const t = setTimeout(() => inputRef.current?.focus(), 100)
       return () => clearTimeout(t)
     }
@@ -30,10 +44,17 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
 
   const reset = useCallback(() => {
     setTitle('')
-    setDueDate('')
-    setProjectId('')
+    setDueDate(todayString())
+    setProjectId(null)
+    setSelectedLabels([])
     setError('')
   }, [])
+
+  const toggleLabel = (labelId: string) => {
+    setSelectedLabels((prev) =>
+      prev.includes(labelId) ? prev.filter((id) => id !== labelId) : [...prev, labelId],
+    )
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,7 +68,8 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
       {
         title: trimmed,
         ...(dueDate && { dueDate }),
-        ...(projectId && { projectId }),
+        ...(effectiveProjectId && { projectId: effectiveProjectId }),
+        ...(selectedLabels.length > 0 && { labels: selectedLabels }),
       },
       {
         onSuccess: () => {
@@ -137,7 +159,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
                 <label htmlFor="quick-add-project" className="sr-only">Project</label>
                 <select
                   id="quick-add-project"
-                  value={projectId}
+                  value={effectiveProjectId}
                   onChange={(e) => setProjectId(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
@@ -149,6 +171,39 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               </div>
             )}
           </div>
+
+          {/* Label picker */}
+          {labels && labels.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Labels</p>
+              <div className="flex flex-wrap gap-1.5">
+                {labels.map((label) => {
+                  const selected = selectedLabels.includes(label.id)
+                  return (
+                    <button
+                      key={label.id}
+                      type="button"
+                      onClick={() => toggleLabel(label.id)}
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                        selected
+                          ? 'border-transparent bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                          : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
+                      )}
+                      aria-pressed={selected}
+                    >
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: label.color }}
+                        aria-hidden="true"
+                      />
+                      {label.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
