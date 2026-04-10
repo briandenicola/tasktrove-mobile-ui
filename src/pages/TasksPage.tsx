@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { TaskList } from '@/components/tasks/TaskList'
 import { QuickAdd } from '@/components/tasks/QuickAdd'
@@ -10,6 +11,7 @@ export function TasksPage() {
   const { data: tasks, isLoading, error, refetch } = useTasks()
   const completeTask = useCompleteTask()
   const { logout } = useAuth()
+  const navigate = useNavigate()
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [quickAddOpen, setQuickAddOpen] = useState(false)
 
@@ -35,6 +37,11 @@ export function TasksPage() {
   const handleRefresh = useCallback(() => {
     return refetch()
   }, [refetch])
+
+  const handleTap = useCallback(
+    (id: string) => navigate(`/task/${id}`),
+    [navigate],
+  )
 
   return (
     <AppShell
@@ -79,6 +86,7 @@ export function TasksPage() {
         <TaskList
           tasks={tasks}
           onToggle={handleToggle}
+          onTap={handleTap}
           onRefresh={handleRefresh}
           pendingIds={pendingIds}
         />

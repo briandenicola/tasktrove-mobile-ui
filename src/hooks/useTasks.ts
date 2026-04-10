@@ -27,6 +27,22 @@ export function useTasks() {
   })
 }
 
+export function useTask(id: string) {
+  const { client } = useAuth()
+
+  return useQuery({
+    queryKey: [...TASKS_KEY, id],
+    queryFn: async ({ signal }) => {
+      if (!client) throw new Error('Not authenticated')
+      const res = await createTaskApi(client).getTasks(signal)
+      const task = res.tasks.find((t) => t.id === id)
+      if (!task) throw new Error('Task not found')
+      return task
+    },
+    enabled: !!client && !!id,
+  })
+}
+
 export function useCompleteTask() {
   const { client } = useAuth()
   const queryClient = useQueryClient()
