@@ -161,16 +161,22 @@ volumes:
 
 TaskTrove validates request origins — cross-origin requests from a different domain will be rejected with `INVALID_ORIGIN` (403). Serving both UI and API from the same domain avoids CORS entirely and ensures HTTPS works seamlessly.
 
+> **CORS Note:** If you must host the PWA on a different domain, TaskTrove would need an `ALLOWED_ORIGINS` environment variable to whitelist your PWA domain. As of now, TaskTrove does not expose this setting — same-origin deployment (reverse proxy) is the only supported approach.
+
 ## Project Structure
 
 ```
 src/
 ├── api/          # Typed API client + endpoint functions
 ├── components/   # React components (auth, layout, tasks, ui)
-├── hooks/        # Custom hooks (auth, tasks, online status)
+│   ├── auth/     # SetupScreen
+│   ├── layout/   # AppShell, BottomNav, OfflineBanner
+│   ├── tasks/    # TaskItem, TaskList, TaskDetail, QuickAdd, EmptyState
+│   └── ui/       # Button, Input, Checkbox, PriorityBadge
+├── hooks/        # Custom hooks (auth, tasks, projects, labels, online)
 ├── lib/          # Zod schemas, types, utils, config
 ├── pages/        # Route page components
-├── App.tsx       # Router + providers
+├── App.tsx       # Router + providers + auth guard
 └── main.tsx      # Entry point
 ```
 
