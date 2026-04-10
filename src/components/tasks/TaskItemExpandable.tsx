@@ -133,34 +133,44 @@ export function TaskItemExpandable({
 
           {/* Labels */}
           {task.labels.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {task.labels.map((labelId) => {
-                const label = labelMap.get(labelId)
-                return (
-                  <span
-                    key={labelId}
-                    className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    {label && (
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: label.color }}
-                        aria-hidden="true"
-                      />
-                    )}
-                    {label?.name ?? labelId}
-                  </span>
-                )
-              })}
+            <div>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                Labels
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {task.labels.map((labelId) => {
+                  const label = labelMap.get(labelId)
+                  return (
+                    <span
+                      key={labelId}
+                      className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      {label && (
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: label.color }}
+                          aria-hidden="true"
+                        />
+                      )}
+                      {label?.name ?? labelId}
+                    </span>
+                  )
+                })}
+              </div>
             </div>
           )}
 
           {/* Subtasks */}
           {task.subtasks.length > 0 && (
             <div>
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Subtasks · {completedSubtasks}/{task.subtasks.length}
-              </p>
+              <div className="mb-2 flex items-center gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  Subtasks
+                </p>
+                <span className="rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                  {completedSubtasks}/{task.subtasks.length}
+                </span>
+              </div>
               <ul className="space-y-1">
                 {task.subtasks.map((sub) => (
                   <li key={sub.id} className="flex items-center gap-2.5">
