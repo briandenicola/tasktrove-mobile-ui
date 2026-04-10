@@ -121,7 +121,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3 overflow-hidden">
           <div>
             <input
               ref={inputRef}
@@ -143,14 +143,14 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="sm:flex-1">
+            <div className="min-w-0 sm:flex-1">
               <label htmlFor="quick-add-date" className="sr-only">Due date</label>
               <input
                 id="quick-add-date"
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="box-border w-full max-w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
 
