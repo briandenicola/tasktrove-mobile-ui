@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
 import { TasksPage } from '@/pages/TasksPage'
 import { TaskDetailPage } from '@/pages/TaskDetailPage'
+import { ProjectPage } from '@/pages/ProjectPage'
 import { SetupPage } from '@/pages/SetupPage'
 import type { ReactNode } from 'react'
 
@@ -39,6 +40,14 @@ function AppRoutes() {
         element={
           <AuthGuard>
             <TaskDetailPage />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/project/:id"
+        element={
+          <AuthGuard>
+            <ProjectPage />
           </AuthGuard>
         }
       />

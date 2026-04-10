@@ -43,6 +43,14 @@ export function useTask(id: string) {
   })
 }
 
+export function useTasksByProject(projectId: string) {
+  const { data: tasks, ...rest } = useTasks()
+
+  const filtered = tasks?.filter((t) => t.projectId === projectId)
+
+  return { data: filtered, ...rest }
+}
+
 export function useCompleteTask() {
   const { client } = useAuth()
   const queryClient = useQueryClient()
