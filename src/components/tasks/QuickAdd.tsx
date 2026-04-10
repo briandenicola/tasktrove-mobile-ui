@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useCreateTask } from '@/hooks/useTasks'
-import { useProjects } from '@/hooks/useProjects'
 import { useLabels } from '@/hooks/useLabels'
+import { getDefaultProject, getDefaultAssignee } from '@/lib/config'
 import { cn } from '@/lib/utils'
 
 function todayString() {
@@ -15,20 +15,12 @@ interface QuickAddProps {
 }
 
 export function QuickAdd({ open, onClose }: QuickAddProps) {
-  const { data: projects } = useProjects()
   const { data: labels } = useLabels()
-
-  const meProject = projects?.find((p) => p.name.toLowerCase() === 'me')
-  const defaultProjectId = meProject?.id ?? ''
 
   const [title, setTitle] = useState('')
   const [dueDate, setDueDate] = useState(todayString)
-  const [projectId, setProjectId] = useState<string | null>(null)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [error, setError] = useState('')
-
-  // Use explicit selection if user has interacted, otherwise default to "me"
-  const effectiveProjectId = projectId ?? defaultProjectId
 
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -45,7 +37,6 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
   const reset = useCallback(() => {
     setTitle('')
     setDueDate(todayString())
-    setProjectId(null)
     setSelectedLabels([])
     setError('')
   }, [])
@@ -64,11 +55,15 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
       return
     }
 
+    const defaultProject = getDefaultProject()
+    const defaultAssignee = getDefaultAssignee()
+
     createTask.mutate(
       {
         title: trimmed,
         ...(dueDate && { dueDate }),
-        ...(effectiveProjectId && { projectId: effectiveProjectId }),
+        ...(defaultProject && { projectId: defaultProject }),
+        ...(defaultAssignee && { ownerId: defaultAssignee, assignees: [defaultAssignee] }),
         ...(selectedLabels.length > 0 && { labels: selectedLabels }),
       },
       {
@@ -142,34 +137,15 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
             )}
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="min-w-0 sm:flex-1">
-              <label htmlFor="quick-add-date" className="sr-only">Due date</label>
-              <input
-                id="quick-add-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="box-border w-full max-w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              />
-            </div>
-
-            {projects && projects.length > 0 && (
-              <div className="min-w-0 sm:flex-1">
-                <label htmlFor="quick-add-project" className="sr-only">Project</label>
-                <select
-                  id="quick-add-project"
-                  value={effectiveProjectId}
-                  onChange={(e) => setProjectId(e.target.value)}
-                  className="w-full truncate rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="">No project</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+          <div>
+            <label htmlFor="quick-add-date" className="sr-only">Due date</label>
+            <input
+              id="quick-add-date"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="box-border w-full max-w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            />
           </div>
 
           {/* Label picker */}

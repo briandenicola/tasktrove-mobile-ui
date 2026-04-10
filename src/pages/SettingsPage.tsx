@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { SetupScreen } from '@/components/auth/SetupScreen'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
+import { useProjects } from '@/hooks/useProjects'
+import { getDefaultProject, setDefaultProject, getDefaultAssignee, setDefaultAssignee } from '@/lib/config'
 import { cn } from '@/lib/utils'
 
 type ThemeMode = 'light' | 'dark' | 'system'
@@ -25,7 +28,21 @@ const FONT_OPTIONS: { value: FontSize; label: string; preview: string }[] = [
 export function SettingsPage() {
   const { baseUrl } = useAuth()
   const { mode, setMode, fontSize, setFontSize } = useTheme()
+  const { data: projects } = useProjects()
   const navigate = useNavigate()
+
+  const [defaultProjectId, setDefaultProjectId] = useState(() => getDefaultProject() ?? '')
+  const [assigneeId, setAssigneeId] = useState(() => getDefaultAssignee() ?? '')
+
+  const handleProjectChange = (value: string) => {
+    setDefaultProjectId(value)
+    setDefaultProject(value)
+  }
+
+  const handleAssigneeChange = (value: string) => {
+    setAssigneeId(value)
+    setDefaultAssignee(value)
+  }
 
   return (
     <AppShell title="Settings">
@@ -80,6 +97,43 @@ export function SettingsPage() {
                 <span className="text-[11px]">{opt.label}</span>
               </button>
             ))}
+          </div>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Task Defaults</h2>
+          <div className="space-y-3">
+            <div>
+              <label htmlFor="default-project" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Default Project
+              </label>
+              <select
+                id="default-project"
+                value={defaultProjectId}
+                onChange={(e) => handleProjectChange(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="">None</option>
+                {projects?.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="default-assignee" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Default Assignee ID
+              </label>
+              <input
+                id="default-assignee"
+                type="text"
+                value={assigneeId}
+                onChange={(e) => handleAssigneeChange(e.target.value)}
+                placeholder="UUID of default assignee"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Used as both owner and assignee on new tasks</p>
+            </div>
           </div>
         </section>
 
