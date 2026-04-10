@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -11,7 +10,6 @@ function renderBottomNav(initialPath = '/') {
     defaultOptions: { queries: { retry: false } },
   })
   return {
-    user: userEvent.setup(),
     ...render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
@@ -30,25 +28,40 @@ describe('BottomNav', () => {
     localStorage.clear()
   })
 
-  it('renders the Inbox button', () => {
+  it('renders the Today tab', () => {
     renderBottomNav()
-    expect(screen.getByText('Inbox')).toBeInTheDocument()
+    expect(screen.getByText('Today')).toBeInTheDocument()
   })
 
-  it('marks Inbox as active on root path', () => {
+  it('renders the Upcoming tab', () => {
+    renderBottomNav()
+    expect(screen.getByText('Upcoming')).toBeInTheDocument()
+  })
+
+  it('marks Today as active on root path', () => {
     renderBottomNav('/')
-    const inbox = screen.getByText('Inbox').closest('button')!
-    expect(inbox).toHaveAttribute('aria-current', 'page')
+    const today = screen.getByText('Today').closest('button')!
+    expect(today).toHaveAttribute('aria-current', 'page')
   })
 
   it('renders the navigation landmark', () => {
     renderBottomNav()
-    expect(screen.getByRole('navigation', { name: /project navigation/i })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument()
   })
 
-  it('does not mark Inbox as active on project path', () => {
-    renderBottomNav('/project/abc-123')
-    const inbox = screen.getByText('Inbox').closest('button')!
-    expect(inbox).not.toHaveAttribute('aria-current')
+  it('renders all five tabs', () => {
+    renderBottomNav()
+    const tabs = ['Today', 'Upcoming', 'Add', 'Search', 'Done']
+    for (const label of tabs) {
+      expect(screen.getByLabelText(label)).toBeInTheDocument()
+    }
+  })
+
+  it('does not mark Today as active on upcoming path', () => {
+    renderBottomNav('/upcoming')
+    const today = screen.getByText('Today').closest('button')!
+    expect(today).not.toHaveAttribute('aria-current')
+    const upcoming = screen.getByText('Upcoming').closest('button')!
+    expect(upcoming).toHaveAttribute('aria-current', 'page')
   })
 })

@@ -2,8 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
 import { TasksPage } from '@/pages/TasksPage'
+import { UpcomingPage } from '@/pages/UpcomingPage'
 import { TaskDetailPage } from '@/pages/TaskDetailPage'
 import { ProjectPage } from '@/pages/ProjectPage'
+import { SearchPage } from '@/pages/SearchPage'
+import { CompletedPage } from '@/pages/CompletedPage'
+import { SettingsPage } from '@/pages/SettingsPage'
 import { SetupPage } from '@/pages/SetupPage'
 import type { ReactNode } from 'react'
 
@@ -32,6 +36,38 @@ function AppRoutes() {
         element={
           <AuthGuard>
             <TasksPage />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/upcoming"
+        element={
+          <AuthGuard>
+            <UpcomingPage />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <AuthGuard>
+            <SearchPage />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/completed"
+        element={
+          <AuthGuard>
+            <CompletedPage />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <AuthGuard>
+            <SettingsPage />
           </AuthGuard>
         }
       />

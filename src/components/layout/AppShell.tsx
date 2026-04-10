@@ -1,4 +1,5 @@
 import { OfflineBanner } from './OfflineBanner'
+import { HamburgerMenu } from './HamburgerMenu'
 import type { ReactNode } from 'react'
 
 interface AppShellProps {
@@ -20,7 +21,7 @@ export function AppShell({
 
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white/80 px-4 py-3 backdrop-blur-sm">
         <h1 className="text-lg font-semibold">{title}</h1>
-        {headerRight}
+        {headerRight ?? <HamburgerMenu />}
       </header>
 
       <main className="flex flex-1 flex-col">{children}</main>

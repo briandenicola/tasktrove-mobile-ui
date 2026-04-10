@@ -1,23 +1,22 @@
 import { useCallback, useState } from 'react'
-import { useParams, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { TaskList } from '@/components/tasks/TaskList'
 import { QuickAdd } from '@/components/tasks/QuickAdd'
-import { useTasksByProject, useCompleteTask } from '@/hooks/useTasks'
-import { useProjects } from '@/hooks/useProjects'
+import { useTasks, useCompleteTask } from '@/hooks/useTasks'
+import { filterUpcomingTasks } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
-import { BottomNav } from '@/components/layout/BottomNav'
+import type { TaskGroup } from '@/lib/types'
 
-export function ProjectPage() {
-  const { id } = useParams<{ id: string }>()
-  const { data: tasks, isLoading, error, refetch } = useTasksByProject(id ?? '')
-  const { data: projects } = useProjects()
+export function UpcomingPage() {
+  const { data: tasks, isLoading, error, refetch } = useTasks()
   const completeTask = useCompleteTask()
   const navigate = useNavigate()
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [quickAddOpen, setQuickAddOpen] = useState(false)
 
-  const project = projects?.find((p) => p.id === id)
+  const upcomingGroups: TaskGroup[] = tasks ? filterUpcomingTasks(tasks) : []
 
   const handleToggle = useCallback(
     (id: string, completed: boolean) => {
@@ -43,12 +42,15 @@ export function ProjectPage() {
   }, [refetch])
 
   const handleTap = useCallback(
-    (taskId: string) => navigate(`/task/${taskId}`),
+    (id: string) => navigate(`/task/${id}`),
     [navigate],
   )
 
+  // TaskList expects all tasks; we flatten groups for it
+  const allUpcoming = upcomingGroups.flatMap((g) => g.tasks)
+
   return (
-    <AppShell title={project?.name ?? 'Project'}>
+    <AppShell title="Upcoming">
       {isLoading && (
         <div className="flex flex-1 items-center justify-center">
           <p className="text-gray-500">Loading tasks…</p>
@@ -66,7 +68,7 @@ export function ProjectPage() {
 
       {tasks && (
         <TaskList
-          tasks={tasks}
+          tasks={allUpcoming}
           onToggle={handleToggle}
           onTap={handleTap}
           onRefresh={handleRefresh}

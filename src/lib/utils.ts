@@ -87,6 +87,35 @@ export function groupTasksByDate(tasks: Task[]): TaskGroup[] {
     }))
 }
 
+export function filterTodayTasks(tasks: Task[]): Task[] {
+  return tasks.filter((t) => {
+    if (t.completed || t.archived) return false
+    return getDateGroup(t.dueDate) === 'today' || getDateGroup(t.dueDate) === 'overdue'
+  })
+}
+
+export function filterUpcomingTasks(tasks: Task[]): TaskGroup[] {
+  const grouped = new Map<DateGroup, Task[]>()
+
+  for (const task of tasks) {
+    if (task.completed || task.archived) continue
+    const group = getDateGroup(task.dueDate)
+    if (group === 'today') continue
+    const existing = grouped.get(group) ?? []
+    existing.push(task)
+    grouped.set(group, existing)
+  }
+
+  const order: DateGroup[] = ['overdue', 'upcoming', 'no-date']
+  return order
+    .filter((key) => grouped.has(key))
+    .map((key) => ({
+      key,
+      label: GROUP_LABELS[key],
+      tasks: grouped.get(key)!,
+    }))
+}
+
 // --- Priority ---
 
 const PRIORITY_COLORS: Record<Priority, string> = {
