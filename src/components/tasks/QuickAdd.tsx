@@ -142,8 +142,8 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
             )}
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <label htmlFor="quick-add-date" className="sr-only">Due date</label>
               <input
                 id="quick-add-date"
@@ -155,13 +155,13 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
             </div>
 
             {projects && projects.length > 0 && (
-              <div className="flex-1">
+              <div className="min-w-0">
                 <label htmlFor="quick-add-project" className="sr-only">Project</label>
                 <select
                   id="quick-add-project"
                   value={effectiveProjectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full truncate rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="">No project</option>
                   {projects.map((p) => (
