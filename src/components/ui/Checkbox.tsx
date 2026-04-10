@@ -30,7 +30,7 @@ export function Checkbox({ checked, loading, onChange, label }: CheckboxProps) {
           loading && 'animate-pulse',
           checked
             ? 'border-green-500 bg-green-500'
-            : 'border-gray-400 bg-white hover:border-gray-500',
+            : 'border-gray-400 bg-white dark:bg-gray-800 hover:border-gray-500 dark:border-gray-500',
         )}
       >
         {checked && (

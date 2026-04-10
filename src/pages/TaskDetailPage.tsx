@@ -26,7 +26,7 @@ export function TaskDetailPage() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
           aria-label="Back"
         >
           ← Back
@@ -35,13 +35,13 @@ export function TaskDetailPage() {
     >
       {isLoading && (
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-gray-500">Loading task…</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading task…</p>
         </div>
       )}
 
       {error && (
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-sm text-red-600">Task not found</p>
+          <p className="text-sm text-red-600 dark:text-red-400">Task not found</p>
         </div>
       )}
 

@@ -43,7 +43,7 @@ export function TaskList({
     <div role="list" className="px-4 pb-24">
       {groups.map((group) => (
         <section key={group.key} className="mb-4">
-          <h2 className="sticky top-0 z-[1] bg-white/90 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 backdrop-blur-sm">
+          <h2 className="sticky top-0 z-[1] bg-white/90 dark:bg-gray-900/90 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 backdrop-blur-sm">
             {group.label}
           </h2>
           {group.tasks.map((task) => (

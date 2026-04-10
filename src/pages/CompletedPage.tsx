@@ -45,19 +45,19 @@ export function CompletedPage() {
     <AppShell title="Completed">
       {isLoading && (
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-gray-500">Loading…</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading…</p>
         </div>
       )}
 
       {!isLoading && completedTasks.length === 0 && (
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-            <svg className="mb-4 h-16 w-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg className="mb-4 h-16 w-16 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
               <path d="M22 4L12 14.01l-3-3" />
             </svg>
-            <h2 className="text-lg font-semibold text-gray-700">No completed tasks</h2>
-            <p className="mt-1 text-sm text-gray-500">Tasks you complete will appear here</p>
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No completed tasks</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Tasks you complete will appear here</p>
           </div>
         </PullToRefresh>
       )}

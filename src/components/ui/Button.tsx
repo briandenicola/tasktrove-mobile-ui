@@ -12,7 +12,7 @@ const variantStyles: Record<Variant, string> = {
   primary:
     'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-300',
   secondary:
-    'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300 border border-gray-300 disabled:bg-gray-50 disabled:text-gray-400',
+    'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 border border-gray-300 dark:border-gray-600 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

@@ -81,7 +81,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
       <div
         ref={panelRef}
         className={cn(
-          'w-full max-w-lg rounded-t-2xl bg-white px-4 pb-8 pt-4 shadow-xl',
+          'w-full max-w-lg rounded-t-2xl bg-white dark:bg-gray-800 px-4 pb-8 pt-4 shadow-xl',
           'animate-slide-up',
         )}
       >
@@ -90,7 +90,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
           <button
             type="button"
             onClick={() => { reset(); onClose() }}
-            className="rounded p-1 text-gray-400 hover:text-gray-600"
+            className="rounded p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Close"
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -108,15 +108,15 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               onChange={(e) => { setTitle(e.target.value); setError('') }}
               placeholder="What needs to be done?"
               className={cn(
-                'w-full rounded-lg border px-3 py-2.5 text-base outline-none transition-colors',
-                'placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
-                error ? 'border-red-400' : 'border-gray-300',
+                'w-full rounded-lg border px-3 py-2.5 text-base outline-none transition-colors bg-white dark:bg-gray-700 dark:text-gray-100',
+                'placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
+                error ? 'border-red-400' : 'border-gray-300 dark:border-gray-600',
               )}
               aria-label="Task title"
               aria-invalid={!!error}
             />
             {error && (
-              <p className="mt-1 text-sm text-red-600" role="alert">{error}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{error}</p>
             )}
           </div>
 
@@ -128,7 +128,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
 
@@ -139,7 +139,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
                   id="quick-add-project"
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="">No project</option>
                   {projects.map((p) => (

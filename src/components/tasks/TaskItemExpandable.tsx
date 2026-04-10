@@ -35,7 +35,7 @@ export function TaskItemExpandable({
   return (
     <div
       role="listitem"
-      className="border-b border-gray-100"
+      className="border-b border-gray-100 dark:border-gray-800"
     >
       {/* Main row */}
       <div className="flex items-center gap-1 py-1">
@@ -57,7 +57,7 @@ export function TaskItemExpandable({
           <span
             className={cn(
               'text-base leading-tight',
-              task.completed && 'text-gray-400 line-through',
+              task.completed && 'text-gray-400 dark:text-gray-500 line-through',
             )}
           >
             {task.title}
@@ -66,12 +66,12 @@ export function TaskItemExpandable({
           <div className="flex items-center gap-2">
             <PriorityBadge priority={task.priority} />
             {task.dueDate && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {formatRelativeDate(task.dueDate)}
               </span>
             )}
             {firstLabel && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
+              <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-300">
                 <span
                   className="h-1.5 w-1.5 rounded-full"
                   style={{ backgroundColor: firstLabel.color }}
@@ -92,7 +92,7 @@ export function TaskItemExpandable({
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-gray-400 hover:text-gray-600"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label={expanded ? 'Collapse details' : 'Expand details'}
             aria-expanded={expanded}
           >
@@ -119,7 +119,7 @@ export function TaskItemExpandable({
                 style={{ backgroundColor: project.color }}
                 aria-hidden="true"
               />
-              <span className="text-xs font-medium text-gray-600">{project.name}</span>
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{project.name}</span>
             </div>
           )}
 
@@ -131,7 +131,7 @@ export function TaskItemExpandable({
                 return (
                   <span
                     key={labelId}
-                    className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                    className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300"
                   >
                     {label && (
                       <span
@@ -157,7 +157,7 @@ export function TaskItemExpandable({
                     onChange={(checked) => onSubtaskToggle?.(task.id, sub.id, checked)}
                     label={`Mark subtask "${sub.title}" ${sub.completed ? 'incomplete' : 'complete'}`}
                   />
-                  <span className={cn('text-sm', sub.completed && 'text-gray-400 line-through')}>
+                  <span className={cn('text-sm', sub.completed && 'text-gray-400 dark:text-gray-500 line-through')}>
                     {sub.title}
                   </span>
                 </li>

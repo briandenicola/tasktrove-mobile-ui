@@ -16,10 +16,10 @@ export function AppShell({
   headerRight,
 }: AppShellProps) {
   return (
-    <div className="flex min-h-svh flex-col bg-white text-gray-900">
+    <div className="flex min-h-svh flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <OfflineBanner />
 
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white/80 px-4 py-3 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 px-4 py-3 backdrop-blur-sm">
         <h1 className="text-lg font-semibold">{title}</h1>
         {headerRight ?? <HamburgerMenu />}
       </header>

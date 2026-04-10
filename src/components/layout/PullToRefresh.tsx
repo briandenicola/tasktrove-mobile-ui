@@ -56,7 +56,7 @@ export function PullToRefresh({ onRefresh, children, className }: PullToRefreshP
     >
       {pullDistance > 0 && (
         <div
-          className="flex items-center justify-center text-sm text-gray-400 transition-all"
+          className="flex items-center justify-center text-sm text-gray-400 dark:text-gray-500 transition-all"
           style={{ height: pullDistance }}
         >
           {refreshing

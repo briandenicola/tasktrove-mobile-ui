@@ -112,7 +112,7 @@ export function SetupScreen({ onConnected }: SetupScreenProps) {
         <button
           type="button"
           onClick={() => setShowToken((s) => !s)}
-          className="absolute right-3 top-[34px] text-sm text-gray-500 hover:text-gray-700"
+          className="absolute right-3 top-[34px] text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           tabIndex={-1}
         >
           {showToken ? 'Hide' : 'Show'}
@@ -121,7 +121,7 @@ export function SetupScreen({ onConnected }: SetupScreenProps) {
 
       {status === 'error' && errorMessage && (
         <div
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm text-red-700 dark:text-red-400"
           role="alert"
         >
           {errorMessage}

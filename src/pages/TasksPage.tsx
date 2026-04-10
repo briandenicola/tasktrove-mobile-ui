@@ -67,13 +67,13 @@ export function TasksPage() {
     <AppShell title="Due Today">
       {isLoading && (
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-gray-500">Loading tasks…</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading tasks…</p>
         </div>
       )}
 
       {error && (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6">
-          <p className="text-sm text-red-600">Failed to load tasks</p>
+          <p className="text-sm text-red-600 dark:text-red-400">Failed to load tasks</p>
           <Button variant="secondary" onClick={() => refetch()}>
             Retry
           </Button>
@@ -83,12 +83,12 @@ export function TasksPage() {
       {tasks && todayTasks.length === 0 && !isLoading && (
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-            <svg className="mb-4 h-16 w-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg className="mb-4 h-16 w-16 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
               <path d="M22 4L12 14.01l-3-3" />
             </svg>
-            <h2 className="text-lg font-semibold text-gray-700">All clear!</h2>
-            <p className="mt-1 text-sm text-gray-500">Nothing due today</p>
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">All clear!</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Nothing due today</p>
           </div>
         </PullToRefresh>
       )}

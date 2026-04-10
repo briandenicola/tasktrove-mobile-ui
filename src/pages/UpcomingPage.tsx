@@ -67,13 +67,13 @@ export function UpcomingPage() {
     <AppShell title="Upcoming">
       {isLoading && (
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-gray-500">Loading tasks…</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading tasks…</p>
         </div>
       )}
 
       {error && (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6">
-          <p className="text-sm text-red-600">Failed to load tasks</p>
+          <p className="text-sm text-red-600 dark:text-red-400">Failed to load tasks</p>
           <Button variant="secondary" onClick={() => refetch()}>
             Retry
           </Button>

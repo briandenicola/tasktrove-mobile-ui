@@ -2,7 +2,7 @@ export function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <svg
-        className="mb-4 h-16 w-16 text-gray-300"
+        className="mb-4 h-16 w-16 text-gray-300 dark:text-gray-600"
         viewBox="0 0 64 64"
         fill="none"
         aria-hidden="true"
@@ -22,7 +22,7 @@ export function EmptyState() {
           strokeWidth="2"
           strokeLinecap="round"
         />
-        <circle cx="48" cy="48" r="12" fill="white" />
+        <circle cx="48" cy="48" r="12" className="fill-white dark:fill-gray-900" />
         <circle
           cx="48"
           cy="48"
@@ -38,8 +38,8 @@ export function EmptyState() {
         />
       </svg>
 
-      <h2 className="text-lg font-semibold text-gray-700">No tasks yet</h2>
-      <p className="mt-1 text-sm text-gray-500">
+      <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No tasks yet</h2>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Tap the + button to add your first task
       </p>
     </div>
