@@ -88,32 +88,91 @@ export function groupTasksByDate(tasks: Task[]): TaskGroup[] {
 }
 
 export function filterTodayTasks(tasks: Task[]): Task[] {
-  return tasks.filter((t) => {
-    if (t.completed || t.archived) return false
-    return getDateGroup(t.dueDate) === 'today' || getDateGroup(t.dueDate) === 'overdue'
+  return tasks
+    .filter((t) => {
+      if (t.completed || t.archived) return false
+      return getDateGroup(t.dueDate) === 'today' || getDateGroup(t.dueDate) === 'overdue'
+    })
+    .sort((a, b) => a.priority - b.priority)
+}
+
+function sortByPriority(tasks: Task[]): Task[] {
+  return [...tasks].sort((a, b) => a.priority - b.priority)
+}
+
+function formatDayLabel(dateStr: string): string {
+  const today = startOfDay(new Date())
+  const date = new Date(dateStr + 'T00:00:00')
+  const diffMs = date.getTime() - today.getTime()
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays === -1) return 'Yesterday'
+  if (diffDays === 1) return 'Tomorrow'
+
+  const dayName = date.toLocaleDateString(undefined, { weekday: 'long' })
+
+  if (diffDays >= 2 && diffDays <= 6) return dayName
+  if (diffDays < -1 && diffDays >= -6) return `Last ${dayName}`
+
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
   })
 }
 
-export function filterUpcomingTasks(tasks: Task[]): TaskGroup[] {
-  const grouped = new Map<DateGroup, Task[]>()
+export function groupUpcomingByDay(tasks: Task[]): TaskGroup[] {
+  const overdue: Map<string, Task[]> = new Map()
+  const upcoming: Map<string, Task[]> = new Map()
+  const noDate: Task[] = []
 
   for (const task of tasks) {
     if (task.completed || task.archived) continue
     const group = getDateGroup(task.dueDate)
     if (group === 'today') continue
-    const existing = grouped.get(group) ?? []
-    existing.push(task)
-    grouped.set(group, existing)
+
+    if (!task.dueDate) {
+      noDate.push(task)
+    } else {
+      const bucket = group === 'overdue' ? overdue : upcoming
+      const existing = bucket.get(task.dueDate) ?? []
+      existing.push(task)
+      bucket.set(task.dueDate, existing)
+    }
   }
 
-  const order: DateGroup[] = ['overdue', 'upcoming', 'no-date']
-  return order
-    .filter((key) => grouped.has(key))
-    .map((key) => ({
-      key,
-      label: GROUP_LABELS[key],
-      tasks: grouped.get(key)!,
-    }))
+  const result: TaskGroup[] = []
+
+  // Overdue days — most recent first
+  const overdueDays = [...overdue.keys()].sort((a, b) => b.localeCompare(a))
+  for (const day of overdueDays) {
+    result.push({
+      key: `overdue-${day}`,
+      label: `${formatDayLabel(day)} — Overdue`,
+      tasks: sortByPriority(overdue.get(day)!),
+    })
+  }
+
+  // Upcoming days — soonest first
+  const upcomingDays = [...upcoming.keys()].sort((a, b) => a.localeCompare(b))
+  for (const day of upcomingDays) {
+    result.push({
+      key: `upcoming-${day}`,
+      label: formatDayLabel(day),
+      tasks: sortByPriority(upcoming.get(day)!),
+    })
+  }
+
+  // No date at the end
+  if (noDate.length > 0) {
+    result.push({
+      key: 'no-date',
+      label: 'No Date',
+      tasks: sortByPriority(noDate),
+    })
+  }
+
+  return result
 }
 
 // --- Priority ---

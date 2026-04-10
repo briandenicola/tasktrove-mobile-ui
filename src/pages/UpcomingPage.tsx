@@ -5,9 +5,8 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { TaskList } from '@/components/tasks/TaskList'
 import { QuickAdd } from '@/components/tasks/QuickAdd'
 import { useTasks, useCompleteTask } from '@/hooks/useTasks'
-import { filterUpcomingTasks } from '@/lib/utils'
+import { groupUpcomingByDay } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
-import type { TaskGroup } from '@/lib/types'
 
 export function UpcomingPage() {
   const { data: tasks, isLoading, error, refetch } = useTasks()
@@ -16,7 +15,8 @@ export function UpcomingPage() {
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [quickAddOpen, setQuickAddOpen] = useState(false)
 
-  const upcomingGroups: TaskGroup[] = tasks ? filterUpcomingTasks(tasks) : []
+  const dayGroups = tasks ? groupUpcomingByDay(tasks) : []
+  const allUpcoming = dayGroups.flatMap((g) => g.tasks)
 
   const handleToggle = useCallback(
     (id: string, completed: boolean) => {
@@ -46,9 +46,6 @@ export function UpcomingPage() {
     [navigate],
   )
 
-  // TaskList expects all tasks; we flatten groups for it
-  const allUpcoming = upcomingGroups.flatMap((g) => g.tasks)
-
   return (
     <AppShell title="Upcoming">
       {isLoading && (
@@ -69,6 +66,7 @@ export function UpcomingPage() {
       {tasks && (
         <TaskList
           tasks={allUpcoming}
+          groups={dayGroups}
           onToggle={handleToggle}
           onTap={handleTap}
           onRefresh={handleRefresh}

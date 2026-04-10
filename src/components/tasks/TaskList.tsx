@@ -2,10 +2,11 @@ import { useCallback, useRef, useState } from 'react'
 import { TaskItem } from './TaskItem'
 import { EmptyState } from './EmptyState'
 import { groupTasksByDate } from '@/lib/utils'
-import type { Task } from '@/lib/types'
+import type { Task, TaskGroup } from '@/lib/types'
 
 interface TaskListProps {
   tasks: Task[]
+  groups?: TaskGroup[]
   onToggle: (id: string, completed: boolean) => void
   onTap?: (id: string) => void
   onRefresh?: () => void
@@ -16,12 +17,13 @@ const PULL_THRESHOLD = 80
 
 export function TaskList({
   tasks,
+  groups: precomputedGroups,
   onToggle,
   onTap,
   onRefresh,
   pendingIds,
 }: TaskListProps) {
-  const groups = groupTasksByDate(tasks)
+  const groups = precomputedGroups ?? groupTasksByDate(tasks)
 
   const [pullDistance, setPullDistance] = useState(0)
   const [refreshing, setRefreshing] = useState(false)

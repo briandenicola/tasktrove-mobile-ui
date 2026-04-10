@@ -59,7 +59,7 @@ export type UpdateTaskInput = z.infer<typeof UpdateTaskInputSchema>
 export type DateGroup = 'overdue' | 'today' | 'upcoming' | 'no-date'
 
 export interface TaskGroup {
-  key: DateGroup
+  key: string
   label: string
   tasks: Task[]
 }
