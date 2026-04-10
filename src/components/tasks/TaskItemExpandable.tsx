@@ -161,28 +161,28 @@ export function TaskItemExpandable({
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                 Subtasks · {completedSubtasks}/{task.subtasks.length}
               </p>
-              <ul className="space-y-0.5">
+              <ul className="space-y-1">
                 {task.subtasks.map((sub) => (
-                  <li key={sub.id} className="flex items-center gap-2">
+                  <li key={sub.id} className="flex items-center gap-2.5">
                     <button
                       type="button"
                       role="checkbox"
                       aria-checked={sub.completed}
                       aria-label={`Mark subtask "${sub.title}" ${sub.completed ? 'incomplete' : 'complete'}`}
                       onClick={() => onSubtaskToggle?.(task.id, sub.id, !sub.completed)}
-                      className="flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     >
                       {sub.completed ? (
-                        <span className="flex h-4 w-4 items-center justify-center rounded border-green-500 bg-green-500">
-                          <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <span className="flex h-6 w-6 items-center justify-center rounded border-green-500 bg-green-500">
+                          <svg className="h-3.5 w-3.5 text-white" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                             <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </span>
                       ) : (
-                        <span className="h-4 w-4 rounded border-2 border-gray-300 dark:border-gray-500" />
+                        <span className="h-6 w-6 rounded border-2 border-gray-300 dark:border-gray-500" />
                       )}
                     </button>
-                    <span className={cn('text-sm', sub.completed && 'text-gray-400 dark:text-gray-500 line-through')}>
+                    <span className={cn('text-base', sub.completed && 'text-gray-400 dark:text-gray-500 line-through')}>
                       {sub.title}
                     </span>
                   </li>
