@@ -2,12 +2,17 @@ import { useState, useCallback, useDeferredValue } from 'react'
 import { useNavigate } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { PullToRefresh } from '@/components/layout/PullToRefresh'
 import { QuickAdd } from '@/components/tasks/QuickAdd'
-import { TaskItem } from '@/components/tasks/TaskItem'
+import { TaskItemExpandable } from '@/components/tasks/TaskItemExpandable'
 import { useTasks, useCompleteTask } from '@/hooks/useTasks'
+import { useLabels } from '@/hooks/useLabels'
+import { useProjects } from '@/hooks/useProjects'
 
 export function SearchPage() {
-  const { data: tasks } = useTasks()
+  const { data: tasks, refetch } = useTasks()
+  const { data: labels } = useLabels()
+  const { data: projects } = useProjects()
   const completeTask = useCompleteTask()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -43,6 +48,8 @@ export function SearchPage() {
     [completeTask],
   )
 
+  const handleRefresh = useCallback(() => refetch(), [refetch])
+
   return (
     <AppShell title="Search">
       <div className="px-4 pt-3">
@@ -57,35 +64,39 @@ export function SearchPage() {
         />
       </div>
 
-      {deferredQuery.trim() && filtered.length === 0 && (
-        <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-          <p className="text-sm text-gray-500">No tasks matching "{deferredQuery}"</p>
-        </div>
-      )}
+      <PullToRefresh onRefresh={handleRefresh}>
+        {deferredQuery.trim() && filtered.length === 0 && (
+          <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+            <p className="text-sm text-gray-500">No tasks matching &ldquo;{deferredQuery}&rdquo;</p>
+          </div>
+        )}
 
-      {filtered.length > 0 && (
-        <div role="list" className="px-4 pb-24 pt-2">
-          {filtered.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onToggle={handleToggle}
-              onTap={(id) => navigate(`/task/${id}`)}
-              loading={pendingIds.has(task.id)}
-            />
-          ))}
-        </div>
-      )}
+        {filtered.length > 0 && (
+          <div role="list" className="px-4 pb-24 pt-2">
+            {filtered.map((task) => (
+              <TaskItemExpandable
+                key={task.id}
+                task={task}
+                labels={labels}
+                projects={projects}
+                onToggle={handleToggle}
+                onTap={(id) => navigate(`/task/${id}`)}
+                loading={pendingIds.has(task.id)}
+              />
+            ))}
+          </div>
+        )}
 
-      {!deferredQuery.trim() && (
-        <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-          <svg className="mb-4 h-16 w-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.35-4.35" />
-          </svg>
-          <p className="text-sm text-gray-500">Type to search across all tasks</p>
-        </div>
-      )}
+        {!deferredQuery.trim() && (
+          <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+            <svg className="mb-4 h-16 w-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <p className="text-sm text-gray-500">Type to search across all tasks</p>
+          </div>
+        )}
+      </PullToRefresh>
 
       <QuickAdd open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
       <BottomNav onAddTap={() => setQuickAddOpen(true)} />

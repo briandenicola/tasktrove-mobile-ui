@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { PullToRefresh } from '@/components/layout/PullToRefresh'
 import { TaskList } from '@/components/tasks/TaskList'
 import { QuickAdd } from '@/components/tasks/QuickAdd'
 import { useTasks, useCompleteTask, useUpdateTask } from '@/hooks/useTasks'
@@ -80,14 +81,16 @@ export function TasksPage() {
       )}
 
       {tasks && todayTasks.length === 0 && !isLoading && (
-        <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-          <svg className="mb-4 h-16 w-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-            <path d="M22 4L12 14.01l-3-3" />
-          </svg>
-          <h2 className="text-lg font-semibold text-gray-700">All clear!</h2>
-          <p className="mt-1 text-sm text-gray-500">Nothing due today</p>
-        </div>
+        <PullToRefresh onRefresh={handleRefresh}>
+          <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+            <svg className="mb-4 h-16 w-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+              <path d="M22 4L12 14.01l-3-3" />
+            </svg>
+            <h2 className="text-lg font-semibold text-gray-700">All clear!</h2>
+            <p className="mt-1 text-sm text-gray-500">Nothing due today</p>
+          </div>
+        </PullToRefresh>
       )}
 
       {todayTasks.length > 0 && (
