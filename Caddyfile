@@ -1,5 +1,13 @@
 :80 {
+    # Serve the PWA static files
     root * /srv/tasktrove-ui/dist
+    
+    # Proxy API requests to the TaskTrove backend
+    handle /api/* {
+        reverse_proxy {$TASKTROVE_BACKEND:localhost:8080}
+    }
+
+    # SPA fallback — serve index.html for all non-file routes
     try_files {path} /index.html
     file_server
 }
