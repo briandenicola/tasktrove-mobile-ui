@@ -103,6 +103,60 @@ volumes:
   caddy_data:
 ```
 
+### Option D: Portainer Stack
+
+Import this as a **Stack** in Portainer (Stacks → Add stack → Web editor):
+
+```yaml
+version: "3.8"
+
+services:
+  tasktrove:
+    image: ghcr.io/dohsimpson/tasktrove:latest
+    restart: unless-stopped
+    volumes:
+      - tasktrove_data:/app/data
+    environment:
+      - AUTH_SECRET=your-secret-here
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - tasktrove_ui:/srv/tasktrove-ui/dist:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - tasktrove
+
+volumes:
+  tasktrove_data:
+  tasktrove_ui:
+  caddy_data:
+  caddy_config:
+```
+
+**Portainer setup steps:**
+
+1. Create the stack in Portainer (Stacks → Add stack)
+2. Paste the YAML above and deploy
+3. Upload your `Caddyfile` (Option A config) to the Caddy container at `/etc/caddy/Caddyfile`, or bind-mount it from the host
+4. Copy your built `dist/` folder into the `tasktrove_ui` volume:
+   ```bash
+   # From your build machine
+   npm run build
+   docker cp dist/. <caddy-container-name>:/srv/tasktrove-ui/dist/
+   ```
+5. Restart the Caddy service from the Portainer UI
+
+> **Tip:** Use Portainer's **Environment variables** section to set `AUTH_SECRET` instead of hardcoding it in the YAML. You can also configure Portainer webhooks to auto-redeploy when you push a new image.
+
 ### Why Same-Origin?
 
 TaskTrove validates request origins — cross-origin requests from a different domain will be rejected with `INVALID_ORIGIN` (403). Serving both UI and API from the same domain avoids CORS entirely and ensures HTTPS works seamlessly.
