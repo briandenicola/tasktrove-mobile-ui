@@ -1,4 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="76" fill="#2563eb"/>
-  <text x="50%" y="52%" text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-weight="700" font-size="204" fill="white">T</text>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="check" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+    <linearGradient id="gem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#93c5fd"/>
+      <stop offset="50%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1e3a5f" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- Subtle inner shine -->
+  <rect x="8" y="8" width="496" height="496" rx="100" fill="none" stroke="white" stroke-opacity="0.12" stroke-width="2.5"/>
+
+  <!-- Diamond/gem shape behind the checkmark -->
+  <g filter="shadow">
+    <path d="M256 85 L395 192 L256 427 L117 192 Z" fill="url(#gem)" opacity="0.25"/>
+    <path d="M256 85 L395 192 L256 427 L117 192 Z" fill="none" stroke="white" stroke-opacity="0.2" stroke-width="2"/>
+  </g>
+
+  <!-- Facet lines on gem -->
+  <path d="M117 192 L395 192" stroke="white" stroke-opacity="0.15" stroke-width="1.5"/>
+  <path d="M256 85 L213 192 L256 427" stroke="white" stroke-opacity="0.1" stroke-width="1.25"/>
+  <path d="M256 85 L299 192 L256 427" stroke="white" stroke-opacity="0.1" stroke-width="1.25"/>
+
+  <!-- Checkmark -->
+  <g filter="glow">
+    <path d="M149 261 L224 336 L368 176" fill="none" stroke="url(#check)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Small sparkle accents -->
+  <circle cx="395" cy="117" r="7" fill="white" opacity="0.6"/>
+  <circle cx="416" cy="139" r="4" fill="white" opacity="0.4"/>
+  <circle cx="107" cy="395" r="5" fill="white" opacity="0.3"/>
 </svg>
