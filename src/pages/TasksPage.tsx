@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { TaskList } from '@/components/tasks/TaskList'
+import { QuickAdd } from '@/components/tasks/QuickAdd'
 import { useTasks, useCompleteTask } from '@/hooks/useTasks'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/Button'
@@ -10,6 +11,7 @@ export function TasksPage() {
   const completeTask = useCompleteTask()
   const { logout } = useAuth()
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
 
   const handleToggle = useCallback(
     (id: string, completed: boolean) => {
@@ -45,6 +47,18 @@ export function TasksPage() {
           Sign out
         </button>
       }
+      fab={
+        <button
+          type="button"
+          onClick={() => setQuickAddOpen(true)}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-colors hover:bg-blue-700 active:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          aria-label="Add task"
+        >
+          <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      }
     >
       {isLoading && (
         <div className="flex flex-1 items-center justify-center">
@@ -69,6 +83,8 @@ export function TasksPage() {
           pendingIds={pendingIds}
         />
       )}
+
+      <QuickAdd open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
     </AppShell>
   )
 }
