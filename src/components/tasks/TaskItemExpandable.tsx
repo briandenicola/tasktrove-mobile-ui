@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { PriorityBadge } from '@/components/ui/PriorityBadge'
 import { cn, formatRelativeDate } from '@/lib/utils'
-import type { Task, Label } from '@/lib/types'
+import type { Task, Label, Project } from '@/lib/types'
 
 interface TaskItemExpandableProps {
   task: Task
   labels?: Label[]
+  projects?: Project[]
   onToggle: (id: string, completed: boolean) => void
   onSubtaskToggle?: (taskId: string, subtaskId: string, completed: boolean) => void
   onTap?: (id: string) => void
@@ -16,16 +17,20 @@ interface TaskItemExpandableProps {
 export function TaskItemExpandable({
   task,
   labels,
+  projects,
   onToggle,
   onSubtaskToggle,
   onTap,
   loading,
 }: TaskItemExpandableProps) {
-  const hasExpandable = task.subtasks.length > 0 || task.labels.length > 0
+  const hasExpandable = task.subtasks.length > 0 || task.labels.length > 0 || !!task.projectId
   const [expanded, setExpanded] = useState(false)
 
   const labelMap = new Map(labels?.map((l) => [l.id, l]) ?? [])
+  const projectMap = new Map(projects?.map((p) => [p.id, p]) ?? [])
   const completedSubtasks = task.subtasks.filter((s) => s.completed).length
+  const firstLabel = task.labels.length > 0 ? labelMap.get(task.labels[0]!) : undefined
+  const project = task.projectId ? projectMap.get(task.projectId) : undefined
 
   return (
     <div
@@ -65,9 +70,19 @@ export function TaskItemExpandable({
                 {formatRelativeDate(task.dueDate)}
               </span>
             )}
+            {firstLabel && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: firstLabel.color }}
+                  aria-hidden="true"
+                />
+                {firstLabel.name}
+              </span>
+            )}
             {task.subtasks.length > 0 && (
               <span className="text-xs text-gray-400">
-                {completedSubtasks}/{task.subtasks.length} subtasks
+                {completedSubtasks}/{task.subtasks.length}
               </span>
             )}
           </div>
@@ -96,6 +111,18 @@ export function TaskItemExpandable({
       {/* Expanded section */}
       {expanded && hasExpandable && (
         <div className="pb-3 pl-12 pr-4">
+          {/* Project */}
+          {project && (
+            <div className="mb-2 flex items-center gap-1.5">
+              <span
+                className="h-2.5 w-2.5 rounded"
+                style={{ backgroundColor: project.color }}
+                aria-hidden="true"
+              />
+              <span className="text-xs font-medium text-gray-600">{project.name}</span>
+            </div>
+          )}
+
           {/* Labels */}
           {task.labels.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">

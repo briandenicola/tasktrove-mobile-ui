@@ -2,16 +2,18 @@ import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { BottomNav } from '@/components/layout/BottomNav'
-import { TaskItemExpandable } from '@/components/tasks/TaskItemExpandable'
+import { TaskList } from '@/components/tasks/TaskList'
 import { QuickAdd } from '@/components/tasks/QuickAdd'
 import { useTasks, useCompleteTask, useUpdateTask } from '@/hooks/useTasks'
 import { useLabels } from '@/hooks/useLabels'
+import { useProjects } from '@/hooks/useProjects'
 import { filterTodayTasks } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 
 export function TasksPage() {
   const { data: tasks, isLoading, error, refetch } = useTasks()
   const { data: labels } = useLabels()
+  const { data: projects } = useProjects()
   const completeTask = useCompleteTask()
   const updateTask = useUpdateTask()
   const navigate = useNavigate()
@@ -51,6 +53,10 @@ export function TasksPage() {
     [tasks, updateTask],
   )
 
+  const handleRefresh = useCallback(() => {
+    return refetch()
+  }, [refetch])
+
   const handleTap = useCallback(
     (id: string) => navigate(`/task/${id}`),
     [navigate],
@@ -85,19 +91,16 @@ export function TasksPage() {
       )}
 
       {todayTasks.length > 0 && (
-        <div role="list" className="px-4 pb-24">
-          {todayTasks.map((task) => (
-            <TaskItemExpandable
-              key={task.id}
-              task={task}
-              labels={labels}
-              onToggle={handleToggle}
-              onSubtaskToggle={handleSubtaskToggle}
-              onTap={handleTap}
-              loading={pendingIds.has(task.id)}
-            />
-          ))}
-        </div>
+        <TaskList
+          tasks={todayTasks}
+          labels={labels}
+          projects={projects}
+          onToggle={handleToggle}
+          onSubtaskToggle={handleSubtaskToggle}
+          onTap={handleTap}
+          onRefresh={handleRefresh}
+          pendingIds={pendingIds}
+        />
       )}
 
       <QuickAdd open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />

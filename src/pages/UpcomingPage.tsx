@@ -4,13 +4,18 @@ import { AppShell } from '@/components/layout/AppShell'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { TaskList } from '@/components/tasks/TaskList'
 import { QuickAdd } from '@/components/tasks/QuickAdd'
-import { useTasks, useCompleteTask } from '@/hooks/useTasks'
+import { useTasks, useCompleteTask, useUpdateTask } from '@/hooks/useTasks'
+import { useLabels } from '@/hooks/useLabels'
+import { useProjects } from '@/hooks/useProjects'
 import { groupUpcomingByDay } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 
 export function UpcomingPage() {
   const { data: tasks, isLoading, error, refetch } = useTasks()
+  const { data: labels } = useLabels()
+  const { data: projects } = useProjects()
   const completeTask = useCompleteTask()
+  const updateTask = useUpdateTask()
   const navigate = useNavigate()
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [quickAddOpen, setQuickAddOpen] = useState(false)
@@ -35,6 +40,18 @@ export function UpcomingPage() {
       )
     },
     [completeTask],
+  )
+
+  const handleSubtaskToggle = useCallback(
+    (taskId: string, subtaskId: string, completed: boolean) => {
+      const task = tasks?.find((t) => t.id === taskId)
+      if (!task) return
+      const updatedSubtasks = task.subtasks.map((s) =>
+        s.id === subtaskId ? { ...s, completed } : s,
+      )
+      updateTask.mutate({ id: taskId, subtasks: updatedSubtasks })
+    },
+    [tasks, updateTask],
   )
 
   const handleRefresh = useCallback(() => {
@@ -67,7 +84,10 @@ export function UpcomingPage() {
         <TaskList
           tasks={allUpcoming}
           groups={dayGroups}
+          labels={labels}
+          projects={projects}
           onToggle={handleToggle}
+          onSubtaskToggle={handleSubtaskToggle}
           onTap={handleTap}
           onRefresh={handleRefresh}
           pendingIds={pendingIds}

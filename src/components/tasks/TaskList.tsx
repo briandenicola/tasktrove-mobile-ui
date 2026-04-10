@@ -1,13 +1,16 @@
 import { useCallback, useRef, useState } from 'react'
-import { TaskItem } from './TaskItem'
+import { TaskItemExpandable } from './TaskItemExpandable'
 import { EmptyState } from './EmptyState'
 import { groupTasksByDate } from '@/lib/utils'
-import type { Task, TaskGroup } from '@/lib/types'
+import type { Task, TaskGroup, Label, Project } from '@/lib/types'
 
 interface TaskListProps {
   tasks: Task[]
   groups?: TaskGroup[]
+  labels?: Label[]
+  projects?: Project[]
   onToggle: (id: string, completed: boolean) => void
+  onSubtaskToggle?: (taskId: string, subtaskId: string, completed: boolean) => void
   onTap?: (id: string) => void
   onRefresh?: () => void
   pendingIds?: Set<string>
@@ -18,7 +21,10 @@ const PULL_THRESHOLD = 80
 export function TaskList({
   tasks,
   groups: precomputedGroups,
+  labels,
+  projects,
   onToggle,
+  onSubtaskToggle,
   onTap,
   onRefresh,
   pendingIds,
@@ -93,10 +99,13 @@ export function TaskList({
               {group.label}
             </h2>
             {group.tasks.map((task) => (
-              <TaskItem
+              <TaskItemExpandable
                 key={task.id}
                 task={task}
+                labels={labels}
+                projects={projects}
                 onToggle={onToggle}
+                onSubtaskToggle={onSubtaskToggle}
                 onTap={onTap}
                 loading={pendingIds?.has(task.id)}
               />
