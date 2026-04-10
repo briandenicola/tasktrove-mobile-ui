@@ -46,23 +46,36 @@ npx vitest run -t "should inject auth header"
 - **Server state**: TanStack Query v5 handles fetching, caching, optimistic
   updates, and offline persistence (`persistQueryClient` to localStorage).
 - **Auth state**: React Context + localStorage in `src/hooks/useAuth.ts`.
+- **Theme/font state**: React Context + `useSyncExternalStore` + localStorage
+  in `src/hooks/useTheme.tsx`. Manages light/dark/system theme and
+  small/medium/large/xlarge font size. Root font size is applied via
+  `document.documentElement.style.fontSize` so all rem-based Tailwind
+  utilities scale automatically.
 - **UI state**: React local state only — no global store.
 
 ### Components (`src/components/`)
-- Grouped by feature: `tasks/`, `auth/`, `projects/`, `layout/`, `ui/`.
+- Grouped by feature: `tasks/`, `auth/`, `layout/`, `ui/`.
+- `layout/` includes AppShell, BottomNav, HamburgerMenu, PullToRefresh, OfflineBanner.
+- `tasks/` includes TaskItemExpandable, TaskList, TaskDetail, QuickAdd, EmptyState.
 - `ui/` contains shared primitives (Button, Input, Checkbox, PriorityBadge).
 - No component library (shadcn, MUI, etc.) — custom Tailwind components.
 - All components use named exports, no default exports.
 
 ### Pages (`src/pages/`)
-- 4 routes: `/` (inbox), `/task/:id` (detail), `/project/:id` (filter),
-  `/setup` (auth).
+- Routes: `/` (today), `/upcoming`, `/search`, `/completed`, `/settings`,
+  `/task/:id` (detail), `/project/:id` (filter), `/setup` (auth).
+- 5-tab bottom nav: Today, Upcoming, Add, Search, Completed.
 - Auth guard redirects to `/setup` when no credentials are stored.
 
 ### PWA
 - `vite-plugin-pwa` generates the service worker and injects the manifest.
 - Config is in `vite.config.ts` under the `VitePWA()` plugin.
-- Icons in `public/icons/`, manifest in `public/manifest.json`.
+- Icons in `public/icons/` (custom SVG gem+checkmark, 192×192 and 512×512).
+
+### Deployment
+- Docker image: `bjd145/tasktrove-mobile-ui` (auto-built via GitHub Actions).
+- Caddy reverse proxy inside the container: `/api/*` → `TASKTROVE_BACKEND` env var.
+- Must be served same-origin with the TaskTrove API (CORS `INVALID_ORIGIN` otherwise).
 
 ## Key Conventions
 
@@ -76,11 +89,19 @@ npx vitest run -t "should inject auth header"
 - **IDs are branded UUIDs**: The API uses strict UUID v4 format with
   specific version/variant bits. Use `crypto.randomUUID()` for new IDs.
 
+### Dark Mode
+- TailwindCSS v4 custom variant: `@custom-variant dark (&:where(.dark, .dark *));`
+  defined in `src/index.css`.
+- The `dark` class is toggled on `<html>` by the `useTheme` hook.
+- All components have full `dark:` variant coverage.
+
 ### Mobile-First
 - Design for ≤428px viewport first. Desktop is a progressive enhancement.
 - Touch targets MUST be ≥44×44px.
 - Text inputs MUST have `font-size: 16px` or larger to prevent iOS zoom.
 - One-screen-at-a-time navigation — no side-by-side panels.
+- Use `grid` layouts (not `flex-1`) for side-by-side form fields to prevent
+  overlap at large font sizes on narrow screens.
 
 ### TypeScript
 - Strict mode enabled. No `any` types.
