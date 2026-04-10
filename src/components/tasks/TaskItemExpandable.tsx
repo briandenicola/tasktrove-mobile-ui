@@ -127,7 +127,7 @@ export function TaskItemExpandable({
                 style={{ backgroundColor: project.color }}
                 aria-hidden="true"
               />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{project.name}</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Project: {project.name}</span>
             </div>
           )}
 
