@@ -1,73 +1,125 @@
-# React + TypeScript + Vite
+# TaskTrove Mobile UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A clean, minimal mobile-first PWA for [TaskTrove](https://github.com/dohsimpson/TaskTrove) — the self-hosted task manager.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+React 19 · Vite 6 · TailwindCSS v4 · TanStack Query v5 · React Router v7 · Zod · vite-plugin-pwa
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev          # Start dev server (http://localhost:5173)
+npm test             # Run tests
+npm run typecheck    # TypeScript strict checks
+npm run lint         # ESLint
+npm run build        # Production build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Dev Proxy
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+During development, API requests to `/api/*` are proxied to `http://localhost:3000` (default TaskTrove port). To proxy to a remote instance:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```ts
+// vite.config.ts → server.proxy
+'/api': {
+  target: 'https://todo.yourdomain.com',
+  changeOrigin: true,
+  secure: true,
+}
 ```
+
+Then use `http://localhost:5173` as the Server URL in the setup screen (or enter the full remote URL if connecting directly).
+
+## Production Deployment
+
+The built PWA is a static site (`dist/`). It must be served from the **same origin** as the TaskTrove API to avoid CORS issues. Use a reverse proxy to colocate both.
+
+### Option A: Caddy (recommended)
+
+```caddyfile
+todo.yourdomain.com {
+    # API → TaskTrove container
+    handle /api/* {
+        reverse_proxy tasktrove:3000
+    }
+
+    # Everything else → PWA static files
+    handle {
+        root * /srv/tasktrove-ui/dist
+        try_files {path} /index.html
+        file_server
+    }
+}
+```
+
+### Option B: Nginx
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name todo.yourdomain.com;
+
+    # API → TaskTrove container
+    location /api/ {
+        proxy_pass http://tasktrove:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # PWA static files
+    location / {
+        root /srv/tasktrove-ui/dist;
+        try_files $uri /index.html;
+    }
+}
+```
+
+### Option C: Docker Compose
+
+```yaml
+services:
+  tasktrove:
+    image: ghcr.io/dohsimpson/tasktrove:latest
+    volumes:
+      - ./data:/app/data
+    environment:
+      - AUTH_SECRET=your-secret-here
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./tasktrove-ui/dist:/srv/tasktrove-ui/dist
+      - caddy_data:/data
+
+volumes:
+  caddy_data:
+```
+
+### Why Same-Origin?
+
+TaskTrove validates request origins — cross-origin requests from a different domain will be rejected with `INVALID_ORIGIN` (403). Serving both UI and API from the same domain avoids CORS entirely and ensures HTTPS works seamlessly.
+
+## Project Structure
+
+```
+src/
+├── api/          # Typed API client + endpoint functions
+├── components/   # React components (auth, layout, tasks, ui)
+├── hooks/        # Custom hooks (auth, tasks, online status)
+├── lib/          # Zod schemas, types, utils, config
+├── pages/        # Route page components
+├── App.tsx       # Router + providers
+└── main.tsx      # Entry point
+```
+
+## License
+
+MIT
