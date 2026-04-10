@@ -63,8 +63,10 @@ export function TasksPage() {
     [navigate],
   )
 
+  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+
   return (
-    <AppShell title="Due Today">
+    <AppShell title={`Due Today — ${todayLabel}`}>
       {isLoading && (
         <div className="flex flex-1 items-center justify-center">
           <p className="text-gray-500 dark:text-gray-400">Loading tasks…</p>
