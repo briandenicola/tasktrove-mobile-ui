@@ -153,6 +153,7 @@
 - [ ] T061 Verify PWA installability: test on iOS Safari + Android Chrome, confirm manifest, service worker, and offline caching work
 - [ ] T062 Run Lighthouse audit and address any PWA/performance issues (target 90+ PWA score)
 - [ ] T063 Run `npm run typecheck && npm run lint && npm test` — fix all errors
+- [ ] T063.5 [P] Create `.github/workflows/docker.yml`: GitHub Actions workflow that builds the PWA (`npm run build`), packages `dist/` into a Caddy-based Docker image, and pushes to Docker Hub on tag push or main branch merge; includes build args for cache busting, multi-platform support (amd64/arm64), and a matching `Dockerfile` in the repo root
 - [ ] T064 [P] Add `CORS` note to README: user may need to configure TaskTrove's `ALLOWED_ORIGINS` env var for cross-origin API access from the PWA
 
 ---
