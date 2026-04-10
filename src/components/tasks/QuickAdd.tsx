@@ -142,8 +142,8 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="sm:flex-1">
               <label htmlFor="quick-add-date" className="sr-only">Due date</label>
               <input
                 id="quick-add-date"
@@ -155,7 +155,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
             </div>
 
             {projects && projects.length > 0 && (
-              <div className="min-w-0">
+              <div className="min-w-0 sm:flex-1">
                 <label htmlFor="quick-add-project" className="sr-only">Project</label>
                 <select
                   id="quick-add-project"
