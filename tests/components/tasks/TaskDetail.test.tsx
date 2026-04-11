@@ -28,8 +28,8 @@ describe('TaskDetail', () => {
     expect(screen.getByLabelText('Title')).toHaveValue('Test task')
     expect(screen.getByLabelText('Description')).toHaveValue('A description')
     expect(screen.getByLabelText('Due Date')).toHaveValue('2026-04-15')
-    expect(screen.getByRole('radio', { name: 'Urgent' })).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'High' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: 'High' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Medium' })).toHaveAttribute('aria-checked', 'true')
   })
 
   it('shows save button after editing title', async () => {
@@ -70,9 +70,9 @@ describe('TaskDetail', () => {
     const onSave = vi.fn()
     render(<TaskDetail task={makeTask({ priority: 3 })} onSave={onSave} />)
 
-    expect(screen.getByRole('radio', { name: 'Medium' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: 'Low' })).toHaveAttribute('aria-checked', 'true')
 
-    await user.click(screen.getByRole('radio', { name: 'Urgent' }))
+    await user.click(screen.getByRole('radio', { name: 'High' }))
     await user.click(screen.getByText('Save Changes'))
 
     expect(onSave).toHaveBeenCalledWith(

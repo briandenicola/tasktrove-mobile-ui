@@ -28,12 +28,12 @@ describe('TaskItem', () => {
 
   it('shows priority badge for non-low priorities', () => {
     render(<TaskItem task={makeTask({ priority: 1 })} onToggle={vi.fn()} />)
-    expect(screen.getByText('Urgent')).toBeInTheDocument()
+    expect(screen.getByText('High')).toBeInTheDocument()
   })
 
   it('hides priority badge for low priority (4)', () => {
     render(<TaskItem task={makeTask({ priority: 4 })} onToggle={vi.fn()} />)
-    expect(screen.queryByText('Low')).not.toBeInTheDocument()
+    expect(screen.queryByText('None')).not.toBeInTheDocument()
   })
 
   it('shows relative due date when present', () => {

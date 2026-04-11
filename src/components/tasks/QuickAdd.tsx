@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useCreateTask } from '@/hooks/useTasks'
 import { useLabels } from '@/hooks/useLabels'
 import { getDefaultProject, getDefaultAssignee } from '@/lib/config'
-import { cn } from '@/lib/utils'
+import { getPriorityColor, getPriorityLabel, cn } from '@/lib/utils'
+import type { Priority } from '@/lib/types'
 
 function todayString() {
   const d = new Date()
@@ -19,6 +20,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
 
   const [title, setTitle] = useState('')
   const [dueDate, setDueDate] = useState(todayString)
+  const [priority, setPriority] = useState<Priority>(4)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [error, setError] = useState('')
 
@@ -37,6 +39,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
   const reset = useCallback(() => {
     setTitle('')
     setDueDate(todayString())
+    setPriority(4)
     setSelectedLabels([])
     setError('')
   }, [])
@@ -61,6 +64,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
     createTask.mutate(
       {
         title: trimmed,
+        priority,
         ...(dueDate && { dueDate }),
         ...(defaultProject && { projectId: defaultProject }),
         ...(defaultAssignee && { ownerId: defaultAssignee, assignees: [defaultAssignee] }),
@@ -146,6 +150,30 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               onChange={(e) => setDueDate(e.target.value)}
               className="box-border w-full max-w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
+          </div>
+
+          {/* Priority picker */}
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Priority</p>
+            <div className="flex gap-2" role="radiogroup" aria-label="Priority">
+              {([1, 2, 3, 4] as Priority[]).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  role="radio"
+                  aria-checked={priority === p}
+                  onClick={() => setPriority(p)}
+                  className={cn(
+                    'flex-1 rounded-lg border px-2 py-2 text-xs font-medium transition-colors',
+                    priority === p
+                      ? `${getPriorityColor(p)} border-current bg-current/10`
+                      : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
+                  )}
+                >
+                  {getPriorityLabel(p)}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Label picker */}

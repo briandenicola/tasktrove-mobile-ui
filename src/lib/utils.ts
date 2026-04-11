@@ -189,10 +189,10 @@ export function getPriorityColor(priority: Priority): string {
 }
 
 const PRIORITY_LABELS: Record<Priority, string> = {
-  1: 'Urgent',
-  2: 'High',
-  3: 'Medium',
-  4: 'Low',
+  1: 'High',
+  2: 'Medium',
+  3: 'Low',
+  4: 'None',
 }
 
 export function getPriorityLabel(priority: Priority): string {

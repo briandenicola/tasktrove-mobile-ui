@@ -150,11 +150,11 @@ describe('getPriorityColor', () => {
 })
 
 describe('getPriorityLabel', () => {
-  it('returns Urgent for priority 1', () => {
-    expect(getPriorityLabel(1)).toBe('Urgent')
+  it('returns High for priority 1', () => {
+    expect(getPriorityLabel(1)).toBe('High')
   })
 
   it('returns Low for priority 4', () => {
-    expect(getPriorityLabel(4)).toBe('Low')
+    expect(getPriorityLabel(4)).toBe('None')
   })
 })
