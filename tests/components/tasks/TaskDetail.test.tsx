@@ -44,7 +44,7 @@ describe('TaskDetail', () => {
     expect(screen.getByText('Save Changes')).toBeInTheDocument()
   })
 
-  it('calls onSave with changed fields only', async () => {
+  it('calls onSave with all current field values', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<TaskDetail task={makeTask()} onSave={onSave} />)
@@ -57,12 +57,12 @@ describe('TaskDetail', () => {
       expect.objectContaining({
         id: 'task-1',
         title: 'New title',
+        description: 'A description',
+        priority: 2,
+        dueDate: '2026-04-15',
+        projectId: null,
       }),
     )
-    // Should not include unchanged fields
-    const call = onSave.mock.calls[0][0]
-    expect(call).not.toHaveProperty('priority')
-    expect(call).not.toHaveProperty('description')
   })
 
   it('renders priority selector and allows changing', async () => {

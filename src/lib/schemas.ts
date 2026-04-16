@@ -164,7 +164,7 @@ export const CreateTaskInputSchema = z.object({
 export const UpdateTaskInputSchema = z.object({
   id: UuidSchema,
   title: z.string().optional(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   completed: z.boolean().optional(),
   archived: z.boolean().optional(),
   priority: PrioritySchema.optional(),

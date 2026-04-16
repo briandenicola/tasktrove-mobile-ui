@@ -22,13 +22,14 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
   const markDirty = useCallback(() => setDirty(true), [])
 
   const handleSave = () => {
-    const changes: Record<string, unknown> = { id: task.id }
-    if (title !== task.title) changes.title = title
-    if (description !== (task.description ?? '')) changes.description = description
-    if (priority !== task.priority) changes.priority = priority
-    if (dueDate !== (task.dueDate ?? '')) changes.dueDate = dueDate || null
-    if (projectId !== (task.projectId ?? '')) changes.projectId = projectId || null
-    onSave(changes)
+    onSave({
+      id: task.id,
+      title,
+      description: description || null,
+      priority,
+      dueDate: dueDate || null,
+      projectId: projectId || null,
+    })
   }
 
   const handleSubtaskToggle = (subtaskId: string, completed: boolean) => {
