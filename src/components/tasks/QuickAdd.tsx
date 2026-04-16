@@ -1,13 +1,33 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useCreateTask } from '@/hooks/useTasks'
 import { useLabels } from '@/hooks/useLabels'
 import { getDefaultProject, getDefaultAssignee } from '@/lib/config'
 import { getPriorityColor, getPriorityLabel, cn } from '@/lib/utils'
 import type { Priority } from '@/lib/types'
+import type { Label } from '@/lib/types'
 
 function todayString() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Extract #hashtag tokens from text and match against known labels (case-insensitive). */
+function parseHashtagLabels(text: string, labels: Label[]): { matchedIds: string[]; cleanTitle: string } {
+  const matchedIds: string[] = []
+  let cleanTitle = text
+
+  const hashtags = text.match(/#(\S+)/g)
+  if (!hashtags || labels.length === 0) return { matchedIds, cleanTitle }
+
+  for (const tag of hashtags) {
+    const word = tag.slice(1).toLowerCase()
+    const label = labels.find((l) => l.name.toLowerCase() === word)
+    if (label && !matchedIds.includes(label.id)) {
+      matchedIds.push(label.id)
+      cleanTitle = cleanTitle.replace(tag, '').trim().replace(/\s{2,}/g, ' ')
+    }
+  }
+  return { matchedIds, cleanTitle }
 }
 
 interface QuickAddProps {
@@ -28,6 +48,18 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
   const panelRef = useRef<HTMLDivElement>(null)
 
   const createTask = useCreateTask()
+
+  // Parse hashtag labels from the title
+  const hashtagLabels = useMemo(
+    () => parseHashtagLabels(title, labels ?? []),
+    [title, labels],
+  )
+
+  // Merge hashtag-detected labels with manually selected ones
+  const allSelectedLabels = useMemo(() => {
+    const merged = new Set([...selectedLabels, ...hashtagLabels.matchedIds])
+    return Array.from(merged)
+  }, [selectedLabels, hashtagLabels.matchedIds])
 
   useEffect(() => {
     if (open) {
@@ -52,8 +84,8 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const trimmed = title.trim()
-    if (!trimmed) {
+    const cleanTitle = hashtagLabels.cleanTitle.trim()
+    if (!cleanTitle) {
       setError('Title is required')
       return
     }
@@ -63,12 +95,12 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
 
     createTask.mutate(
       {
-        title: trimmed,
+        title: cleanTitle,
         priority,
         ...(dueDate && { dueDate }),
         ...(defaultProject && { projectId: defaultProject }),
         ...(defaultAssignee && { ownerId: defaultAssignee, assignees: [defaultAssignee] }),
-        ...(selectedLabels.length > 0 && { labels: selectedLabels }),
+        ...(allSelectedLabels.length > 0 && { labels: allSelectedLabels }),
       },
       {
         onSuccess: () => {
@@ -87,6 +119,53 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
       reset()
       onClose()
     }
+  }
+
+  /** Render the title with hashtag labels highlighted inline. */
+  const renderHighlightedTitle = () => {
+    if (!labels || labels.length === 0) return null
+    const hashtags = title.match(/#(\S+)/g)
+    if (!hashtags) return null
+
+    const matchedTags = hashtags.filter((tag) => {
+      const word = tag.slice(1).toLowerCase()
+      return labels.some((l) => l.name.toLowerCase() === word)
+    })
+    if (matchedTags.length === 0) return null
+
+    // Build segments: plain text + highlighted hashtags
+    const segments: { text: string; label?: Label }[] = []
+    let remaining = title
+    for (const tag of matchedTags) {
+      const idx = remaining.indexOf(tag)
+      if (idx > 0) segments.push({ text: remaining.slice(0, idx) })
+      const word = tag.slice(1).toLowerCase()
+      const label = labels.find((l) => l.name.toLowerCase() === word)
+      segments.push({ text: tag, label: label ?? undefined })
+      remaining = remaining.slice(idx + tag.length)
+    }
+    if (remaining) segments.push({ text: remaining })
+
+    return (
+      <div className="mt-1.5 rounded-md bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 text-base" aria-hidden="true">
+        {segments.map((seg, i) =>
+          seg.label ? (
+            <span
+              key={i}
+              className="inline-flex items-center gap-0.5 rounded-md bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 font-bold text-blue-700 dark:text-blue-300"
+            >
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ backgroundColor: seg.label.color }}
+              />
+              {seg.text}
+            </span>
+          ) : (
+            <span key={i} className="text-gray-700 dark:text-gray-200">{seg.text}</span>
+          ),
+        )}
+      </div>
+    )
   }
 
   if (!open) return null
@@ -127,7 +206,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               type="text"
               value={title}
               onChange={(e) => { setTitle(e.target.value); setError('') }}
-              placeholder="What needs to be done?"
+              placeholder="What needs to be done? Use #label"
               className={cn(
                 'w-full rounded-lg border px-3 py-2.5 text-base outline-none transition-colors bg-white dark:bg-gray-700 dark:text-gray-100',
                 'placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
@@ -136,6 +215,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               aria-label="Task title"
               aria-invalid={!!error}
             />
+            {renderHighlightedTitle()}
             {error && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{error}</p>
             )}
@@ -182,17 +262,19 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Labels</p>
               <div className="flex flex-wrap gap-1.5">
                 {labels.map((label) => {
-                  const selected = selectedLabels.includes(label.id)
+                  const selected = allSelectedLabels.includes(label.id)
+                  const fromHashtag = hashtagLabels.matchedIds.includes(label.id)
                   return (
                     <button
                       key={label.id}
                       type="button"
                       onClick={() => toggleLabel(label.id)}
                       className={cn(
-                        'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                        'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors',
                         selected
-                          ? 'border-transparent bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                          : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
+                          ? 'border-blue-400 dark:border-blue-500 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 font-bold shadow-sm'
+                          : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-50 dark:hover:bg-gray-700',
+                        fromHashtag && 'ring-2 ring-blue-400/50 dark:ring-blue-500/50',
                       )}
                       aria-pressed={selected}
                     >
