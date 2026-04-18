@@ -17,7 +17,7 @@ export const mockIndexedDB = () => {
       },
       onsuccess: null,
     })),
-  } as any
+  } as unknown as IDBFactory
 
   // Mock idb-keyval functions
   vi.mock('idb-keyval', () => ({
