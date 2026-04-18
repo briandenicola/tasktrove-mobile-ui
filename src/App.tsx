@@ -1,7 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
 import { ThemeProvider } from '@/hooks/useTheme'
+import { createIDBPersister } from '@/lib/storage'
 import { TasksPage } from '@/pages/TasksPage'
 import { UpcomingPage } from '@/pages/UpcomingPage'
 import { TaskDetailPage } from '@/pages/TaskDetailPage'
@@ -18,9 +20,12 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 30, // 30 seconds
       retry: 2,
       refetchOnWindowFocus: true,
+      gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days (cache persistence)
     },
   },
 })
+
+const persister = createIDBPersister()
 
 function AuthGuard({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth()
@@ -96,13 +101,16 @@ function AppRoutes() {
 export function App() {
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister }}
+      >
         <AuthProvider>
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
         </AuthProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </ThemeProvider>
   )
 }
