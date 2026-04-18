@@ -4,11 +4,14 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { useAuth } from './useAuth'
+import { useOnlineStatus } from './useOnlineStatus'
 import { createTaskApi } from '@/api/tasks'
+import { addToQueue } from '@/lib/storage'
 import type {
   CreateTaskInput,
   UpdateTaskInput,
   TaskListResponse,
+  Task,
 } from '@/lib/types'
 
 const TASKS_KEY = ['tasks'] as const
@@ -54,10 +57,22 @@ export function useTasksByProject(projectId: string) {
 export function useCompleteTask() {
   const { client } = useAuth()
   const queryClient = useQueryClient()
+  const isOnline = useOnlineStatus()
 
   return useMutation({
-    mutationFn: ({ id, completed }: { id: string; completed: boolean }) => {
+    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
       if (!client) throw new Error('Not authenticated')
+
+      // If offline, queue the mutation
+      if (!isOnline) {
+        await addToQueue({
+          type: 'complete',
+          payload: { id, completed },
+        })
+        return { id, completed }
+      }
+
+      // Online - update task normally
       return createTaskApi(client).updateTask({ id, completed })
     },
     onMutate: async ({ id, completed }) => {
@@ -92,10 +107,62 @@ export function useCompleteTask() {
 export function useCreateTask() {
   const { client } = useAuth()
   const queryClient = useQueryClient()
+  const isOnline = useOnlineStatus()
 
   return useMutation({
-    mutationFn: (input: CreateTaskInput) => {
+    mutationFn: async (input: CreateTaskInput) => {
       if (!client) throw new Error('Not authenticated')
+
+      // If offline, queue the mutation
+      if (!isOnline) {
+        // Generate client-side UUID for the new task
+        const tempId = crypto.randomUUID()
+
+        // Add to offline queue
+        await addToQueue({
+          type: 'create',
+          payload: { ...input, id: tempId },
+        })
+
+        // Create optimistic task for immediate UI feedback
+        const optimisticTask: Task = {
+          id: tempId,
+          title: input.title,
+          description: input.description || '',
+          completed: false,
+          priority: input.priority || 3,
+          dueDate: input.dueDate,
+          dueTime: input.dueTime,
+          projectId: input.projectId,
+          ownerId: input.ownerId,
+          assignees: input.assignees || [],
+          labels: input.labels || [],
+          subtasks: [],
+          comments: [],
+          createdAt: new Date().toISOString(),
+          recurring: input.recurring,
+          recurringMode: input.recurringMode || 'dueDate',
+          _offline: true, // Mark as offline task
+        }
+
+        // Update cache optimistically
+        queryClient.setQueryData<TaskListResponse>(TASKS_KEY, (old) => {
+          if (!old) {
+            return {
+              tasks: [optimisticTask],
+              meta: { count: 1, timestamp: new Date().toISOString(), version: '1' }
+            }
+          }
+          return {
+            tasks: [...old.tasks, optimisticTask],
+            meta: { ...old.meta, count: old.tasks.length + 1 }
+          }
+        })
+
+        return optimisticTask
+      }
+
+      // Online - create task normally
       return createTaskApi(client).createTask(input)
     },
     onSuccess: () => {
@@ -107,10 +174,22 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const { client } = useAuth()
   const queryClient = useQueryClient()
+  const isOnline = useOnlineStatus()
 
   return useMutation({
-    mutationFn: (input: UpdateTaskInput) => {
+    mutationFn: async (input: UpdateTaskInput) => {
       if (!client) throw new Error('Not authenticated')
+
+      // If offline, queue the mutation
+      if (!isOnline) {
+        await addToQueue({
+          type: 'update',
+          payload: input,
+        })
+        return input
+      }
+
+      // Online - update task normally
       return createTaskApi(client).updateTask(input)
     },
     onMutate: async (input) => {

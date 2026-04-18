@@ -30,7 +30,7 @@ export type SectionId = string & { readonly __brand: 'SectionId' }
 
 // --- Inferred types from Zod schemas ---
 
-export type Task = z.infer<typeof TaskSchema>
+export type Task = z.infer<typeof TaskSchema> & { _offline?: boolean }
 export type Project = z.infer<typeof ProjectSchema>
 export type Label = z.infer<typeof LabelSchema>
 export type Subtask = z.infer<typeof SubtaskSchema>

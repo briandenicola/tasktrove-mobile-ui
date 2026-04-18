@@ -15,7 +15,10 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "@tanstack/query-persist-client-core": "^5.99.1",
     "@tanstack/react-query": "^5.97.0",
+    "@tanstack/react-query-persist-client": "^5.99.1",
+    "idb-keyval": "^6.2.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router": "^7.14.0",
