@@ -25,10 +25,10 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
     onSave({
       id: task.id,
       title,
-      description: description || null,
+      description: description || undefined,
       priority,
-      dueDate: dueDate || null,
-      projectId: projectId || null,
+      dueDate: dueDate || undefined,
+      projectId: projectId || undefined,
     })
   }
 
