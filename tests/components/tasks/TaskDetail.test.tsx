@@ -60,7 +60,26 @@ describe('TaskDetail', () => {
         description: 'A description',
         priority: 2,
         dueDate: '2026-04-15',
-        projectId: null,
+        projectId: undefined,
+      }),
+    )
+  })
+
+  it('sends undefined (not null) for cleared optional fields', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<TaskDetail task={makeTask({ description: 'Has description', dueDate: '2026-04-20' })} onSave={onSave} />)
+
+    // Clear description and due date
+    await user.clear(screen.getByLabelText('Description'))
+    await user.clear(screen.getByLabelText('Due Date'))
+    await user.click(screen.getByText('Save Changes'))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'task-1',
+        description: undefined,
+        dueDate: undefined,
       }),
     )
   })
