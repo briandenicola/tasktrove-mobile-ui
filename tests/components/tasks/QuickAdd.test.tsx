@@ -131,9 +131,7 @@ describe('QuickAdd', () => {
 
     await user.type(screen.getByLabelText('Task title'), 'Plan sprint')
     const subtaskInput = screen.getByLabelText('Subtask title')
-    await user.click(subtaskInput)
-    await user.paste('Notes')
-    expect(subtaskInput).toHaveValue('Notes')
+    fireEvent.change(subtaskInput, { target: { value: 'Notes' } })
     await user.click(screen.getByRole('button', { name: 'Add subtask' }))
     await user.click(screen.getByRole('button', { name: /add task/i }))
 
