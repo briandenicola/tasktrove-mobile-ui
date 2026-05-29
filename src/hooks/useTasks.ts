@@ -197,6 +197,10 @@ export function useUpdateTask() {
 
       const previous =
         queryClient.getQueryData<TaskListResponse>(TASKS_KEY)
+      const previousTask =
+        queryClient.getQueryData<Task>([...TASKS_KEY, input.id])
+
+      const { id: _id, ...changes } = input // eslint-disable-line @typescript-eslint/no-unused-vars
 
       queryClient.setQueryData<TaskListResponse>(TASKS_KEY, (old) => {
         if (!old) return old
@@ -204,17 +208,26 @@ export function useUpdateTask() {
           ...old,
           tasks: old.tasks.map((t) => {
             if (t.id !== input.id) return t
-            const { id: _id, ...changes } = input // eslint-disable-line @typescript-eslint/no-unused-vars
             return { ...t, ...changes } as typeof t
           }),
         }
       })
 
-      return { previous }
+      // Also update the individual task cache so the detail page
+      // shows the correct data immediately without a stale flash.
+      queryClient.setQueryData<Task>([...TASKS_KEY, input.id], (old) => {
+        if (!old) return old
+        return { ...old, ...changes } as typeof old
+      })
+
+      return { previous, previousTask }
     },
-    onError: (_err, _vars, context) => {
+    onError: (_err, vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(TASKS_KEY, context.previous)
+      }
+      if (context?.previousTask) {
+        queryClient.setQueryData([...TASKS_KEY, vars.id], context.previousTask)
       }
     },
     onSettled: () => {
