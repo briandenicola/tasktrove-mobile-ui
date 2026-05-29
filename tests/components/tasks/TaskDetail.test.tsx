@@ -61,6 +61,8 @@ describe('TaskDetail', () => {
         priority: 2,
         dueDate: '2026-04-15',
         projectId: undefined,
+        labels: [],
+        subtasks: [],
       }),
     )
   })
@@ -70,7 +72,6 @@ describe('TaskDetail', () => {
     const onSave = vi.fn()
     render(<TaskDetail task={makeTask({ description: 'Has description', dueDate: '2026-04-20' })} onSave={onSave} />)
 
-    // Clear description and due date
     await user.clear(screen.getByLabelText('Description'))
     await user.clear(screen.getByLabelText('Due Date'))
     await user.click(screen.getByText('Save Changes'))
@@ -99,7 +100,7 @@ describe('TaskDetail', () => {
     )
   })
 
-  it('renders subtasks with toggleable checkboxes', async () => {
+  it('allows toggling, adding, and deleting subtasks before save', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     const task = makeTask({
@@ -110,34 +111,50 @@ describe('TaskDetail', () => {
     })
     render(<TaskDetail task={task} onSave={onSave} />)
 
-    expect(screen.getByText('Subtasks (1/2)')).toBeInTheDocument()
-    expect(screen.getByText('Subtask one')).toBeInTheDocument()
-    expect(screen.getByText('Subtask two')).toBeInTheDocument()
-
-    // Toggle first subtask
     const checkboxes = screen.getAllByRole('checkbox')
     await user.click(checkboxes[0])
+    await user.type(screen.getByLabelText('Subtask title'), 'Subtask three')
+    await user.click(screen.getByRole('button', { name: 'Add subtask' }))
+    await user.click(screen.getByRole('button', { name: 'Delete subtask Subtask two' }))
+    await user.click(screen.getByText('Save Changes'))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'task-1',
         subtasks: expect.arrayContaining([
           expect.objectContaining({ id: 'sub-1', completed: true }),
+          expect.objectContaining({ title: 'Subtask three', completed: false }),
         ]),
       }),
     )
+
+    const savedSubtasks = (onSave.mock.calls[0]?.[0] as { subtasks: Array<{ id: string }> }).subtasks
+    expect(savedSubtasks).toHaveLength(2)
+    expect(savedSubtasks.some((subtask) => subtask.id === 'sub-2')).toBe(false)
   })
 
-  it('renders labels as read-only chips', () => {
-    const task = makeTask({ labels: ['label-1', 'label-2'] })
+  it('allows adding and removing labels', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    const task = makeTask({ labels: ['label-1'] })
     const labels: Label[] = [
       { id: 'label-1', name: 'Bug', color: '#ff0000' },
       { id: 'label-2', name: 'Feature', color: '#00ff00' },
     ]
-    render(<TaskDetail task={task} labels={labels} onSave={vi.fn()} />)
 
-    expect(screen.getByText('Bug')).toBeInTheDocument()
-    expect(screen.getByText('Feature')).toBeInTheDocument()
+    render(<TaskDetail task={task} labels={labels} onSave={onSave} />)
+
+    await user.type(screen.getByLabelText('Labels'), 'Feature')
+    await user.click(screen.getByRole('button', { name: 'Add label' }))
+    await user.click(screen.getByRole('button', { name: 'Remove label Bug' }))
+    await user.click(screen.getByText('Save Changes'))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'task-1',
+        labels: ['label-2'],
+      }),
+    )
   })
 
   it('renders comments as read-only', () => {
@@ -166,8 +183,6 @@ describe('TaskDetail', () => {
 
   it('shows Saving state on the button', () => {
     render(<TaskDetail task={makeTask()} onSave={vi.fn()} saving />)
-    // Dirty state needed for button to show — trigger it
-    // Since saving=true doesn't show button without dirty, just verify no crash
     expect(screen.getByLabelText('Title')).toBeInTheDocument()
   })
 })

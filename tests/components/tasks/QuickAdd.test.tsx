@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -104,7 +104,7 @@ describe('QuickAdd', () => {
     await user.type(screen.getByLabelText('Task title'), 'Buy milk')
     await user.click(screen.getByRole('button', { name: /add task/i }))
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(onClose).toHaveBeenCalled()
     })
 
@@ -114,6 +114,89 @@ describe('QuickAdd', () => {
         method: 'POST',
       }),
     )
+  })
+
+  it('includes subtasks in create payload', async () => {
+    localStorage.setItem('tasktrove_base_url', 'https://todo.example.com')
+    localStorage.setItem('tasktrove_token', 'test-token')
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ success: true, taskIds: ['a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'] }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { user } = renderQuickAdd({ open: true })
+
+    await user.type(screen.getByLabelText('Task title'), 'Plan sprint')
+    const subtaskInput = screen.getByLabelText('Subtask title')
+    await user.click(subtaskInput)
+    await user.paste('Notes')
+    expect(subtaskInput).toHaveValue('Notes')
+    await user.click(screen.getByRole('button', { name: 'Add subtask' }))
+    await user.click(screen.getByRole('button', { name: /add task/i }))
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://todo.example.com/api/v1/tasks',
+        expect.objectContaining({ method: 'POST' }),
+      )
+    })
+
+    const taskCall = mockFetch.mock.calls.find(([url]) => url === 'https://todo.example.com/api/v1/tasks')
+    expect(taskCall).toBeTruthy()
+    const body = JSON.parse((taskCall?.[1] as RequestInit).body as string)
+    expect(body.subtasks).toEqual(expect.arrayContaining([expect.objectContaining({ completed: false })]))
+    expect(body.subtasks[0].title).toBe('Notes')
+  })
+
+  it('adds labels from look-ahead input', async () => {
+    localStorage.setItem('tasktrove_base_url', 'https://todo.example.com')
+    localStorage.setItem('tasktrove_token', 'test-token')
+
+    const mockFetch = vi.fn((url: string) => {
+      if (url === 'https://todo.example.com/api/v1/labels') {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({
+            labels: [{ id: '11111111-1111-4111-8111-111111111111', name: 'Bug', color: '#ff0000' }],
+            meta: { count: 1, timestamp: '2026-01-01T00:00:00Z', version: '1' },
+          }),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ success: true, taskIds: ['a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'] }),
+      })
+    })
+
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { user } = renderQuickAdd({ open: true })
+
+    await waitFor(() => expect(screen.getByLabelText('Labels')).toBeInTheDocument())
+    await user.type(screen.getByLabelText('Task title'), 'Fix login')
+    const labelInput = screen.getByLabelText('Labels')
+    fireEvent.change(labelInput, { target: { value: 'Bug' } })
+    await user.click(screen.getByRole('button', { name: 'Add label' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Remove label Bug' })).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: /add task/i }))
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://todo.example.com/api/v1/tasks',
+        expect.objectContaining({ method: 'POST' }),
+      )
+    })
+
+    const taskCall = mockFetch.mock.calls.find(([url]) => url === 'https://todo.example.com/api/v1/tasks')
+    expect(taskCall).toBeTruthy()
+    const body = JSON.parse((taskCall?.[1] as RequestInit).body as string)
+    expect(body.labels).toEqual(['11111111-1111-4111-8111-111111111111'])
   })
 
   it('has a due date input', () => {
