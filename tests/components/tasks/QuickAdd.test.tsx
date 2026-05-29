@@ -133,6 +133,7 @@ describe('QuickAdd', () => {
     const subtaskInput = screen.getByLabelText('Subtask title')
     await user.click(subtaskInput)
     await user.paste('Notes')
+    expect(subtaskInput).toHaveValue('Notes')
     await user.click(screen.getByRole('button', { name: 'Add subtask' }))
     await user.click(screen.getByRole('button', { name: /add task/i }))
 
@@ -147,7 +148,7 @@ describe('QuickAdd', () => {
     expect(taskCall).toBeTruthy()
     const body = JSON.parse((taskCall?.[1] as RequestInit).body as string)
     expect(body.subtasks).toEqual(expect.arrayContaining([expect.objectContaining({ completed: false })]))
-    expect(body.subtasks[0].title.toLowerCase()).toContain('note')
+    expect(body.subtasks[0].title).toBe('Notes')
   })
 
   it('adds labels from look-ahead input', async () => {
