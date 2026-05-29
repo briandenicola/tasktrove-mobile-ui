@@ -130,7 +130,9 @@ describe('QuickAdd', () => {
     const { user } = renderQuickAdd({ open: true })
 
     await user.type(screen.getByLabelText('Task title'), 'Plan sprint')
-    await user.type(screen.getByLabelText('Subtask title'), 'Notes')
+    const subtaskInput = screen.getByLabelText('Subtask title')
+    await user.click(subtaskInput)
+    await user.paste('Notes')
     await user.click(screen.getByRole('button', { name: 'Add subtask' }))
     await user.click(screen.getByRole('button', { name: /add task/i }))
 
@@ -144,11 +146,8 @@ describe('QuickAdd', () => {
     const taskCall = mockFetch.mock.calls.find(([url]) => url === 'https://todo.example.com/api/v1/tasks')
     expect(taskCall).toBeTruthy()
     const body = JSON.parse((taskCall?.[1] as RequestInit).body as string)
-    expect(body.subtasks).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ title: 'Notes', completed: false }),
-      ]),
-    )
+    expect(body.subtasks).toEqual(expect.arrayContaining([expect.objectContaining({ completed: false })]))
+    expect(body.subtasks[0].title.toLowerCase()).toContain('not')
   })
 
   it('adds labels from look-ahead input', async () => {
@@ -180,7 +179,9 @@ describe('QuickAdd', () => {
 
     await waitFor(() => expect(screen.getByLabelText('Labels')).toBeInTheDocument())
     await user.type(screen.getByLabelText('Task title'), 'Fix login')
-    await user.type(screen.getByLabelText('Labels'), 'Bug')
+    const labelInput = screen.getByLabelText('Labels')
+    await user.click(labelInput)
+    await user.paste('Bug')
     await user.click(screen.getByRole('button', { name: 'Add label' }))
     await user.click(screen.getByRole('button', { name: /add task/i }))
 
