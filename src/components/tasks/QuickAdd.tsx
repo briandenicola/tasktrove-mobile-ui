@@ -12,9 +12,14 @@ function todayString() {
 }
 
 function makeId() {
-  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random()}`
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.floor(Math.random() * 16)
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
 }
 
 interface QuickAddProps {
@@ -35,8 +40,6 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
   const [error, setError] = useState('')
 
   const inputRef = useRef<HTMLInputElement>(null)
-  const labelInputRef = useRef<HTMLInputElement>(null)
-  const subtaskInputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
   const createTask = useCreateTask()
@@ -84,8 +87,8 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
     setSelectedLabels((prev) => prev.filter((id) => id !== labelId))
   }, [])
 
-  const addSubtask = useCallback((rawValue?: string) => {
-    const trimmed = (rawValue ?? subtaskInput).trim()
+  const addSubtask = useCallback(() => {
+    const trimmed = subtaskInput.trim()
     if (!trimmed) return
 
     setSubtasks((prev) => [...prev, { id: makeId(), title: trimmed, completed: false }])
@@ -230,7 +233,6 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  ref={labelInputRef}
                   value={labelInput}
                   list="quick-add-label-list"
                   onChange={(e) => setLabelInput(e.target.value)}
@@ -246,7 +248,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
                 />
                 <button
                   type="button"
-                  onClick={() => addLabel(labelInputRef.current?.value ?? labelInput)}
+                  onClick={() => addLabel(labelInput)}
                   className="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   aria-label="Add label"
                 >
@@ -286,13 +288,12 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                ref={subtaskInputRef}
                 value={subtaskInput}
                 onChange={(e) => setSubtaskInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
-                    addSubtask(e.currentTarget.value)
+                    addSubtask()
                   }
                 }}
                 placeholder="Add a subtask"
@@ -301,7 +302,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               />
               <button
                 type="button"
-                onClick={() => addSubtask(subtaskInputRef.current?.value ?? subtaskInput)}
+                onClick={addSubtask}
                 className="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 aria-label="Add subtask"
               >

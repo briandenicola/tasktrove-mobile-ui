@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -147,7 +147,7 @@ describe('QuickAdd', () => {
     expect(taskCall).toBeTruthy()
     const body = JSON.parse((taskCall?.[1] as RequestInit).body as string)
     expect(body.subtasks).toEqual(expect.arrayContaining([expect.objectContaining({ completed: false })]))
-    expect(body.subtasks[0].title.toLowerCase()).toContain('not')
+    expect(body.subtasks[0].title.toLowerCase()).toContain('note')
   })
 
   it('adds labels from look-ahead input', async () => {
@@ -180,9 +180,9 @@ describe('QuickAdd', () => {
     await waitFor(() => expect(screen.getByLabelText('Labels')).toBeInTheDocument())
     await user.type(screen.getByLabelText('Task title'), 'Fix login')
     const labelInput = screen.getByLabelText('Labels')
-    await user.click(labelInput)
-    await user.paste('Bug')
+    fireEvent.change(labelInput, { target: { value: 'Bug' } })
     await user.click(screen.getByRole('button', { name: 'Add label' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Remove label Bug' })).toBeInTheDocument())
     await user.click(screen.getByRole('button', { name: /add task/i }))
 
     await waitFor(() => {
