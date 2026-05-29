@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { cn, getPriorityColor, getPriorityLabel, formatDateTime } from '@/lib/utils'
-import type { Task, Priority, Label } from '@/lib/types'
+import type { Task, Priority, Label, Subtask } from '@/lib/types'
 
 interface TaskDetailProps {
   task: Task
@@ -11,15 +11,36 @@ interface TaskDetailProps {
   saving?: boolean
 }
 
+function makeId() {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random()}`
+}
+
 export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetailProps) {
   const [title, setTitle] = useState(task.title)
   const [description, setDescription] = useState(task.description ?? '')
   const [priority, setPriority] = useState<Priority>(task.priority)
   const [dueDate, setDueDate] = useState(task.dueDate ?? '')
   const [projectId, setProjectId] = useState(task.projectId ?? '')
+  const [selectedLabels, setSelectedLabels] = useState<string[]>(task.labels)
+  const [labelInput, setLabelInput] = useState('')
+  const [subtasks, setSubtasks] = useState<Subtask[]>(task.subtasks)
+  const [subtaskInput, setSubtaskInput] = useState('')
   const [dirty, setDirty] = useState(false)
 
   const markDirty = useCallback(() => setDirty(true), [])
+
+  const labelMap = useMemo(() => new Map(labels?.map((l) => [l.id, l]) ?? []), [labels])
+
+  const availableLabelSuggestions = useMemo(() => {
+    const needle = labelInput.trim().toLowerCase()
+    return (labels ?? []).filter((label) => {
+      if (selectedLabels.includes(label.id)) return false
+      if (!needle) return true
+      return label.name.toLowerCase().includes(needle)
+    })
+  }, [labelInput, labels, selectedLabels])
 
   const handleSave = () => {
     onSave({
@@ -29,17 +50,46 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
       priority,
       dueDate: dueDate || undefined,
       projectId: projectId || undefined,
+      labels: selectedLabels,
+      subtasks,
     })
   }
 
   const handleSubtaskToggle = (subtaskId: string, completed: boolean) => {
-    const updatedSubtasks = task.subtasks.map((s) =>
-      s.id === subtaskId ? { ...s, completed } : s,
-    )
-    onSave({ id: task.id, subtasks: updatedSubtasks })
+    setSubtasks((prev) => prev.map((s) => (s.id === subtaskId ? { ...s, completed } : s)))
+    markDirty()
   }
 
-  const labelMap = new Map(labels?.map((l) => [l.id, l]) ?? [])
+  const handleSubtaskAdd = () => {
+    const trimmed = subtaskInput.trim()
+    if (!trimmed) return
+
+    setSubtasks((prev) => [...prev, { id: makeId(), title: trimmed, completed: false }])
+    setSubtaskInput('')
+    markDirty()
+  }
+
+  const handleSubtaskDelete = (subtaskId: string) => {
+    setSubtasks((prev) => prev.filter((subtask) => subtask.id !== subtaskId))
+    markDirty()
+  }
+
+  const handleAddLabel = (value: string) => {
+    const trimmed = value.trim().toLowerCase()
+    if (!trimmed || !labels?.length) return
+
+    const match = labels.find((label) => label.name.toLowerCase() === trimmed)
+    if (!match) return
+
+    setSelectedLabels((prev) => (prev.includes(match.id) ? prev : [...prev, match.id]))
+    setLabelInput('')
+    markDirty()
+  }
+
+  const handleRemoveLabel = (labelId: string) => {
+    setSelectedLabels((prev) => prev.filter((id) => id !== labelId))
+    markDirty()
+  }
 
   return (
     <div className="space-y-5 px-4 pb-24 pt-4">
@@ -123,55 +173,125 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
         </div>
       )}
 
-      {/* Subtasks */}
-      {task.subtasks.length > 0 && (
+      {/* Labels */}
+      {labels && labels.length > 0 && (
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Subtasks ({task.subtasks.filter((s) => s.completed).length}/{task.subtasks.length})
-          </span>
-          <ul className="space-y-1">
-            {task.subtasks.map((sub) => (
-              <li key={sub.id} className="flex items-center gap-1">
-                <Checkbox
-                  checked={sub.completed}
-                  onChange={(checked) => handleSubtaskToggle(sub.id, checked)}
-                  label={`Mark subtask "${sub.title}" ${sub.completed ? 'incomplete' : 'complete'}`}
-                />
-                <span className={cn('text-sm dark:text-gray-200', sub.completed && 'text-gray-400 dark:text-gray-500 line-through')}>
-                  {sub.title}
-                </span>
-              </li>
+          <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Labels</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={labelInput}
+              list="task-detail-label-list"
+              onChange={(e) => setLabelInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleAddLabel(labelInput)
+                }
+              }}
+              placeholder="Type a label"
+              aria-label="Labels"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            />
+            <button
+              type="button"
+              onClick={() => handleAddLabel(labelInput)}
+              className="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Add label"
+            >
+              +
+            </button>
+          </div>
+          <datalist id="task-detail-label-list">
+            {availableLabelSuggestions.map((label) => (
+              <option key={label.id} value={label.name} />
             ))}
-          </ul>
+          </datalist>
+
+          {selectedLabels.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {selectedLabels.map((labelId) => {
+                const label = labelMap.get(labelId)
+                return (
+                  <button
+                    key={labelId}
+                    type="button"
+                    onClick={() => handleRemoveLabel(labelId)}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-300"
+                    aria-label={`Remove label ${label?.name ?? labelId}`}
+                  >
+                    {label && (
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: label.color }}
+                        aria-hidden="true"
+                      />
+                    )}
+                    {label?.name ?? labelId} ×
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Labels (read-only) */}
-      {task.labels.length > 0 && (
-        <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Labels</span>
-          <div className="flex flex-wrap gap-2">
-            {task.labels.map((labelId) => {
-              const label = labelMap.get(labelId)
-              return (
-                <span
-                  key={labelId}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-300"
-                >
-                  {label && (
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: label.color }}
-                      aria-hidden="true"
-                    />
-                  )}
-                  {label?.name ?? labelId}
-                </span>
-              )
-            })}
-          </div>
+      {/* Subtasks */}
+      <div>
+        <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          Subtasks ({subtasks.filter((s) => s.completed).length}/{subtasks.length})
+        </span>
+        <div className="mb-2 flex items-center gap-2">
+          <input
+            type="text"
+            value={subtaskInput}
+            onChange={(e) => setSubtaskInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleSubtaskAdd()
+              }
+            }}
+            placeholder="Add a subtask"
+            aria-label="Subtask title"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          />
+          <button
+            type="button"
+            onClick={handleSubtaskAdd}
+            className="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            aria-label="Add subtask"
+          >
+            +
+          </button>
         </div>
-      )}
+        {subtasks.length > 0 && (
+          <ul className="space-y-1">
+            {subtasks.map((sub) => (
+              <li key={sub.id} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1">
+                  <Checkbox
+                    checked={sub.completed}
+                    onChange={(checked) => handleSubtaskToggle(sub.id, checked)}
+                    label={`Mark subtask "${sub.title}" ${sub.completed ? 'incomplete' : 'complete'}`}
+                  />
+                  <span className={cn('text-sm dark:text-gray-200', sub.completed && 'text-gray-400 dark:text-gray-500 line-through')}>
+                    {sub.title}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSubtaskDelete(sub.id)}
+                  className="text-gray-400 hover:text-red-500"
+                  aria-label={`Delete subtask ${sub.title}`}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Comments (read-only) */}
       {task.comments.length > 0 && (

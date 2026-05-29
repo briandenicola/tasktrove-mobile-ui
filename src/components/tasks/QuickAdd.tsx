@@ -4,30 +4,17 @@ import { useLabels } from '@/hooks/useLabels'
 import { getDefaultProject, getDefaultAssignee } from '@/lib/config'
 import { getPriorityColor, getPriorityLabel, cn } from '@/lib/utils'
 import type { Priority } from '@/lib/types'
-import type { Label } from '@/lib/types'
+import type { Label, Subtask } from '@/lib/types'
 
 function todayString() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-/** Extract #hashtag tokens from text and match against known labels (case-insensitive). */
-function parseHashtagLabels(text: string, labels: Label[]): { matchedIds: string[]; cleanTitle: string } {
-  const matchedIds: string[] = []
-  let cleanTitle = text
-
-  const hashtags = text.match(/#(\S+)/g)
-  if (!hashtags || labels.length === 0) return { matchedIds, cleanTitle }
-
-  for (const tag of hashtags) {
-    const word = tag.slice(1).toLowerCase()
-    const label = labels.find((l) => l.name.toLowerCase() === word)
-    if (label && !matchedIds.includes(label.id)) {
-      matchedIds.push(label.id)
-      cleanTitle = cleanTitle.replace(tag, '').trim().replace(/\s{2,}/g, ' ')
-    }
-  }
-  return { matchedIds, cleanTitle }
+function makeId() {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random()}`
 }
 
 interface QuickAddProps {
@@ -42,6 +29,9 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
   const [dueDate, setDueDate] = useState(todayString)
   const [priority, setPriority] = useState<Priority>(4)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
+  const [labelInput, setLabelInput] = useState('')
+  const [subtasks, setSubtasks] = useState<Subtask[]>([])
+  const [subtaskInput, setSubtaskInput] = useState('')
   const [error, setError] = useState('')
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -49,17 +39,16 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
 
   const createTask = useCreateTask()
 
-  // Parse hashtag labels from the title
-  const hashtagLabels = useMemo(
-    () => parseHashtagLabels(title, labels ?? []),
-    [title, labels],
-  )
+  const labelMap = useMemo(() => new Map(labels?.map((l) => [l.id, l]) ?? []), [labels])
 
-  // Merge hashtag-detected labels with manually selected ones
-  const allSelectedLabels = useMemo(() => {
-    const merged = new Set([...selectedLabels, ...hashtagLabels.matchedIds])
-    return Array.from(merged)
-  }, [selectedLabels, hashtagLabels.matchedIds])
+  const availableLabelSuggestions = useMemo(() => {
+    const needle = labelInput.trim().toLowerCase()
+    return (labels ?? []).filter((label) => {
+      if (selectedLabels.includes(label.id)) return false
+      if (!needle) return true
+      return label.name.toLowerCase().includes(needle)
+    })
+  }, [labelInput, labels, selectedLabels])
 
   useEffect(() => {
     if (open) {
@@ -73,18 +62,41 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
     setDueDate(todayString())
     setPriority(4)
     setSelectedLabels([])
+    setLabelInput('')
+    setSubtasks([])
+    setSubtaskInput('')
     setError('')
   }, [])
 
-  const toggleLabel = (labelId: string) => {
-    setSelectedLabels((prev) =>
-      prev.includes(labelId) ? prev.filter((id) => id !== labelId) : [...prev, labelId],
-    )
-  }
+  const addLabel = useCallback((value: string) => {
+    const trimmed = value.trim().toLowerCase()
+    if (!trimmed || !labels?.length) return
+    const match = labels.find((label) => label.name.toLowerCase() === trimmed)
+    if (!match) return
+
+    setSelectedLabels((prev) => (prev.includes(match.id) ? prev : [...prev, match.id]))
+    setLabelInput('')
+  }, [labels])
+
+  const removeLabel = useCallback((labelId: string) => {
+    setSelectedLabels((prev) => prev.filter((id) => id !== labelId))
+  }, [])
+
+  const addSubtask = useCallback(() => {
+    const trimmed = subtaskInput.trim()
+    if (!trimmed) return
+
+    setSubtasks((prev) => [...prev, { id: makeId(), title: trimmed, completed: false }])
+    setSubtaskInput('')
+  }, [subtaskInput])
+
+  const removeSubtask = useCallback((subtaskId: string) => {
+    setSubtasks((prev) => prev.filter((subtask) => subtask.id !== subtaskId))
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const cleanTitle = hashtagLabels.cleanTitle.trim()
+    const cleanTitle = title.trim()
     if (!cleanTitle) {
       setError('Title is required')
       return
@@ -100,7 +112,8 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
         ...(dueDate && { dueDate }),
         ...(defaultProject && { projectId: defaultProject }),
         ...(defaultAssignee && { ownerId: defaultAssignee, assignees: [defaultAssignee] }),
-        ...(allSelectedLabels.length > 0 && { labels: allSelectedLabels }),
+        ...(selectedLabels.length > 0 && { labels: selectedLabels }),
+        ...(subtasks.length > 0 && { subtasks }),
       },
       {
         onSuccess: () => {
@@ -119,53 +132,6 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
       reset()
       onClose()
     }
-  }
-
-  /** Render the title with hashtag labels highlighted inline. */
-  const renderHighlightedTitle = () => {
-    if (!labels || labels.length === 0) return null
-    const hashtags = title.match(/#(\S+)/g)
-    if (!hashtags) return null
-
-    const matchedTags = hashtags.filter((tag) => {
-      const word = tag.slice(1).toLowerCase()
-      return labels.some((l) => l.name.toLowerCase() === word)
-    })
-    if (matchedTags.length === 0) return null
-
-    // Build segments: plain text + highlighted hashtags
-    const segments: { text: string; label?: Label }[] = []
-    let remaining = title
-    for (const tag of matchedTags) {
-      const idx = remaining.indexOf(tag)
-      if (idx > 0) segments.push({ text: remaining.slice(0, idx) })
-      const word = tag.slice(1).toLowerCase()
-      const label = labels.find((l) => l.name.toLowerCase() === word)
-      segments.push({ text: tag, label: label ?? undefined })
-      remaining = remaining.slice(idx + tag.length)
-    }
-    if (remaining) segments.push({ text: remaining })
-
-    return (
-      <div className="mt-1.5 rounded-md bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 text-base" aria-hidden="true">
-        {segments.map((seg, i) =>
-          seg.label ? (
-            <span
-              key={i}
-              className="inline-flex items-center gap-0.5 rounded-md bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 font-bold text-blue-700 dark:text-blue-300"
-            >
-              <span
-                className="inline-block h-2 w-2 rounded-full"
-                style={{ backgroundColor: seg.label.color }}
-              />
-              {seg.text}
-            </span>
-          ) : (
-            <span key={i} className="text-gray-700 dark:text-gray-200">{seg.text}</span>
-          ),
-        )}
-      </div>
-    )
   }
 
   if (!open) return null
@@ -206,7 +172,7 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               type="text"
               value={title}
               onChange={(e) => { setTitle(e.target.value); setError('') }}
-              placeholder="What needs to be done? Use #label"
+              placeholder="What needs to be done?"
               className={cn(
                 'w-full rounded-lg border px-3 py-2.5 text-base outline-none transition-colors bg-white dark:bg-gray-700 dark:text-gray-100',
                 'placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
@@ -215,7 +181,6 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
               aria-label="Task title"
               aria-invalid={!!error}
             />
-            {renderHighlightedTitle()}
             {error && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{error}</p>
             )}
@@ -256,40 +221,108 @@ export function QuickAdd({ open, onClose }: QuickAddProps) {
             </div>
           </div>
 
-          {/* Label picker */}
+          {/* Label look-ahead input */}
           {labels && labels.length > 0 && (
             <div>
               <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Labels</p>
-              <div className="flex flex-wrap gap-1.5">
-                {labels.map((label) => {
-                  const selected = allSelectedLabels.includes(label.id)
-                  const fromHashtag = hashtagLabels.matchedIds.includes(label.id)
-                  return (
-                    <button
-                      key={label.id}
-                      type="button"
-                      onClick={() => toggleLabel(label.id)}
-                      className={cn(
-                        'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors',
-                        selected
-                          ? 'border-blue-400 dark:border-blue-500 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 font-bold shadow-sm'
-                          : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-50 dark:hover:bg-gray-700',
-                        fromHashtag && 'ring-2 ring-blue-400/50 dark:ring-blue-500/50',
-                      )}
-                      aria-pressed={selected}
-                    >
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: label.color }}
-                        aria-hidden="true"
-                      />
-                      {label.name}
-                    </button>
-                  )
-                })}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={labelInput}
+                  list="quick-add-label-list"
+                  onChange={(e) => setLabelInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      addLabel(labelInput)
+                    }
+                  }}
+                  placeholder="Type a label"
+                  aria-label="Labels"
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => addLabel(labelInput)}
+                  className="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  aria-label="Add label"
+                >
+                  +
+                </button>
               </div>
+              <datalist id="quick-add-label-list">
+                {availableLabelSuggestions.map((label) => (
+                  <option key={label.id} value={label.name} />
+                ))}
+              </datalist>
+
+              {selectedLabels.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {selectedLabels.map((labelId) => {
+                    const label = labelMap.get(labelId)
+                    return (
+                      <button
+                        key={labelId}
+                        type="button"
+                        onClick={() => removeLabel(labelId)}
+                        className="inline-flex items-center gap-1 rounded-full border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 text-xs text-blue-700 dark:text-blue-200"
+                        aria-label={`Remove label ${label?.name ?? labelId}`}
+                      >
+                        {label?.name ?? labelId} ×
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
+
+          {/* Subtasks input */}
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Subtasks</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={subtaskInput}
+                onChange={(e) => setSubtaskInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addSubtask()
+                  }
+                }}
+                placeholder="Add a subtask"
+                aria-label="Subtask title"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+              <button
+                type="button"
+                onClick={addSubtask}
+                className="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                aria-label="Add subtask"
+              >
+                +
+              </button>
+            </div>
+
+            {subtasks.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {subtasks.map((subtask) => (
+                  <li key={subtask.id} className="flex items-center justify-between rounded-md bg-gray-50 dark:bg-gray-700/50 px-2 py-1.5 text-sm dark:text-gray-200">
+                    <span>{subtask.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeSubtask(subtask.id)}
+                      className="text-gray-400 hover:text-red-500"
+                      aria-label={`Remove subtask ${subtask.title}`}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <button
             type="submit"
