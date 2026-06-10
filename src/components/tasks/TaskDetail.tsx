@@ -156,7 +156,7 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
           type="date"
           value={dueDate}
           onChange={(e) => { setDueDate(e.target.value); markDirty() }}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          className="box-border w-full max-w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
       </div>
 
