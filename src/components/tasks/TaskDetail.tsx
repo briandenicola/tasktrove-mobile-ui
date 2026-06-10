@@ -97,7 +97,7 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
   }
 
   return (
-    <div className="space-y-5 px-4 pb-24 pt-4">
+    <div className="w-full max-w-full space-y-5 overflow-x-hidden px-4 pb-24 pt-4">
       {/* Title */}
       <div>
         <label htmlFor="detail-title" className="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</label>
@@ -126,7 +126,7 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
       {/* Priority */}
       <div>
         <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Priority</span>
-        <div className="flex gap-2" role="radiogroup" aria-label="Priority">
+        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Priority">
           {([1, 2, 3, 4] as Priority[]).map((p) => (
             <button
               key={p}
@@ -136,7 +136,7 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
               aria-label={getPriorityLabel(p)}
               onClick={() => { setPriority(p); markDirty() }}
               className={cn(
-                'flex h-10 flex-1 items-center justify-center rounded-lg border text-sm font-medium transition-colors',
+                'flex h-10 min-w-0 items-center justify-center rounded-lg border text-sm font-medium transition-colors',
                 priority === p
                   ? `${getPriorityColor(p)} border-current bg-current/10`
                   : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
@@ -156,7 +156,7 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
           type="date"
           value={dueDate}
           onChange={(e) => { setDueDate(e.target.value); markDirty() }}
-          className="box-border w-full max-w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          className="box-border min-w-0 w-full max-w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
         />
       </div>
 
@@ -182,7 +182,7 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
       {labels && labels.length > 0 && (
         <div>
           <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Labels</span>
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
             <input
               type="text"
               value={labelInput}
@@ -196,12 +196,12 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
               }}
               placeholder="Type a label"
               aria-label="Labels"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="min-w-0 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
             <button
               type="button"
               onClick={() => handleAddLabel(labelInput)}
-              className="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="h-9 w-9 shrink-0 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               aria-label="Add label"
             >
               +
@@ -246,7 +246,7 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
         <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
           Subtasks ({subtasks.filter((s) => s.completed).length}/{subtasks.length})
         </span>
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
           <input
             type="text"
             value={subtaskInput}
@@ -259,12 +259,12 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
             }}
             placeholder="Add a subtask"
             aria-label="Subtask title"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="min-w-0 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
           <button
             type="button"
             onClick={handleSubtaskAdd}
-            className="h-9 w-9 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="h-9 w-9 shrink-0 rounded-lg border border-gray-300 dark:border-gray-600 text-lg leading-none text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Add subtask"
           >
             +

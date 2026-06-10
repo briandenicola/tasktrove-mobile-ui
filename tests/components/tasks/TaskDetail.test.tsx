@@ -186,9 +186,20 @@ describe('TaskDetail', () => {
     expect(screen.getByLabelText('Title')).toBeInTheDocument()
   })
 
-  it('date input has box-sizing and max-width to prevent overflow', () => {
-    render(<TaskDetail task={makeTask()} onSave={vi.fn()} />)
+  it('contains native date input overflow on narrow mobile viewports', () => {
+    const { container } = render(<TaskDetail task={makeTask()} onSave={vi.fn()} />)
     const dateInput = screen.getByLabelText('Due Date')
-    expect(dateInput).toHaveClass('box-border', 'max-w-full')
+    const root = container.firstElementChild
+
+    expect(root).toHaveClass('w-full', 'max-w-full', 'overflow-x-hidden')
+    expect(dateInput).toHaveClass('box-border', 'min-w-0', 'w-full', 'max-w-full')
+  })
+
+  it('keeps compact edit rows from widening the detail page', () => {
+    render(<TaskDetail task={makeTask()} labels={[{ id: 'label-1', name: 'Personal', color: '#00ff00' }]} onSave={vi.fn()} />)
+
+    expect(screen.getByRole('radiogroup', { name: 'Priority' })).toHaveClass('grid', 'grid-cols-4')
+    expect(screen.getByLabelText('Labels')).toHaveClass('min-w-0')
+    expect(screen.getByLabelText('Subtask title')).toHaveClass('min-w-0')
   })
 })
