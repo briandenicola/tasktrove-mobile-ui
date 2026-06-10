@@ -185,4 +185,10 @@ describe('TaskDetail', () => {
     render(<TaskDetail task={makeTask()} onSave={vi.fn()} saving />)
     expect(screen.getByLabelText('Title')).toBeInTheDocument()
   })
+
+  it('date input has box-sizing and max-width to prevent overflow', () => {
+    render(<TaskDetail task={makeTask()} onSave={vi.fn()} />)
+    const dateInput = screen.getByLabelText('Due Date')
+    expect(dateInput).toHaveClass('box-border', 'max-w-full')
+  })
 })
