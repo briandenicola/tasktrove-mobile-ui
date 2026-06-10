@@ -22,6 +22,15 @@ function makeId() {
   })
 }
 
+function formatDueDateForDisplay(dateStr: string) {
+  const date = new Date(`${dateStr}T00:00:00`)
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
 export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetailProps) {
   const [title, setTitle] = useState(task.title)
   const [description, setDescription] = useState(task.description ?? '')
@@ -151,13 +160,18 @@ export function TaskDetail({ task, labels, projects, onSave, saving }: TaskDetai
       {/* Due Date */}
       <div>
         <label htmlFor="detail-date" className="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Due Date</label>
-        <input
-          id="detail-date"
-          type="date"
-          value={dueDate}
-          onChange={(e) => { setDueDate(e.target.value); markDirty() }}
-          className="box-border min-w-0 w-full max-w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        />
+        <div className="relative box-border flex min-h-11 w-full max-w-full overflow-hidden rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
+          <span className={cn('min-w-0 truncate', !dueDate && 'text-gray-400 dark:text-gray-500')} aria-hidden="true">
+            {dueDate ? formatDueDateForDisplay(dueDate) : 'No due date'}
+          </span>
+          <input
+            id="detail-date"
+            type="date"
+            value={dueDate}
+            onChange={(e) => { setDueDate(e.target.value); markDirty() }}
+            className="absolute inset-0 box-border h-full min-w-0 w-full max-w-full cursor-pointer appearance-none border-0 bg-transparent p-0 text-base opacity-0 outline-none"
+          />
+        </div>
       </div>
 
       {/* Project */}

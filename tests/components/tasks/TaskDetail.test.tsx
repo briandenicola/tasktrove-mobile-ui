@@ -189,10 +189,13 @@ describe('TaskDetail', () => {
   it('contains native date input overflow on narrow mobile viewports', () => {
     const { container } = render(<TaskDetail task={makeTask()} onSave={vi.fn()} />)
     const dateInput = screen.getByLabelText('Due Date')
+    const dateWrapper = dateInput.parentElement
     const root = container.firstElementChild
 
     expect(root).toHaveClass('w-full', 'max-w-full', 'overflow-x-hidden')
-    expect(dateInput).toHaveClass('box-border', 'min-w-0', 'w-full', 'max-w-full')
+    expect(dateWrapper).toHaveClass('relative', 'w-full', 'max-w-full', 'overflow-hidden')
+    expect(dateInput).toHaveClass('absolute', 'inset-0', 'opacity-0', 'appearance-none', 'w-full', 'max-w-full')
+    expect(screen.getByText('Apr 15, 2026')).toBeInTheDocument()
   })
 
   it('keeps compact edit rows from widening the detail page', () => {
