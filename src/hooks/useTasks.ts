@@ -235,3 +235,56 @@ export function useUpdateTask() {
     },
   })
 }
+
+export function useDeleteTask() {
+  const { client } = useAuth()
+  const queryClient = useQueryClient()
+  const isOnline = useOnlineStatus()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!client) throw new Error('Not authenticated')
+
+      if (!isOnline) {
+        await addToQueue({
+          type: 'delete',
+          payload: { id },
+        })
+        return { success: true, taskIds: [id] }
+      }
+
+      return createTaskApi(client).deleteTasks([id])
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: TASKS_KEY })
+
+      const previous =
+        queryClient.getQueryData<TaskListResponse>(TASKS_KEY)
+      const previousTask =
+        queryClient.getQueryData<Task>([...TASKS_KEY, id])
+
+      queryClient.setQueryData<TaskListResponse>(TASKS_KEY, (old) => {
+        if (!old) return old
+        return {
+          ...old,
+          tasks: old.tasks.filter((task) => task.id !== id),
+          meta: { ...old.meta, count: Math.max(0, old.meta.count - 1) },
+        }
+      })
+      queryClient.removeQueries({ queryKey: [...TASKS_KEY, id] })
+
+      return { previous, previousTask }
+    },
+    onError: (_err, id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(TASKS_KEY, context.previous)
+      }
+      if (context?.previousTask) {
+        queryClient.setQueryData([...TASKS_KEY, id], context.previousTask)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: TASKS_KEY })
+    },
+  })
+}

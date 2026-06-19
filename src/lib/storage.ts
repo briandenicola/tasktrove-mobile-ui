@@ -24,7 +24,7 @@ export function createIDBPersister(idbKey = 'tasktrove_query_cache'): Persister 
 /**
  * Mutation queue types
  */
-export type MutationType = 'create' | 'update' | 'complete'
+export type MutationType = 'create' | 'update' | 'complete' | 'delete'
 
 export interface QueuedMutation {
   id: string // Unique ID for this queued operation

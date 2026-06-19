@@ -67,6 +67,11 @@ export function useSyncManager() {
             await api.updateTask({ id, completed })
             break
           }
+          case 'delete': {
+            const { id } = mutation.payload as { id: string }
+            await api.deleteTasks([id])
+            break
+          }
         }
         return true
       } catch (error) {
